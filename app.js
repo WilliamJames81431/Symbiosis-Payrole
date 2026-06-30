@@ -91,6 +91,7 @@ import {
   toggleFeatureFlag,
   toggleDashboardWidget,
   toggleGoogleOrgField,
+  populateGoogleEmployees,
   addGoogleAccountFromEditor,
   deleteGoogleAccountFromEditor,
   editorInsertLink,
@@ -1787,7 +1788,7 @@ function switchTab(tab) {
     return;
   }
   // Employee self-service tabs are only accessible to Employee role or ERP (for testing/demo)
-  if (tab.startsWith('emp') && actualRole !== 'Employee' && actualRole !== 'ERP') {
+  if (tab.startsWith('emp-') && actualRole !== 'Employee' && actualRole !== 'ERP') {
     console.warn('SECURITY: Access denied — Employee tab attempted by unauthorized user');
     return;
   }
@@ -5977,6 +5978,7 @@ window.changeEpfoCeilingLimit = changeEpfoCeilingLimit;
 window.simulateEmailPayslip = simulateEmailPayslip;
 window.exportDatabaseBackup = exportDatabaseBackup;
 window.importDatabaseBackup = importDatabaseBackup;
+window.filterEmployeeTable = filterEmployeeTable;
 
 // ----------------------------------------------------
 // 15. PREMIUM UI ENHANCEMENTS (Theme, Spotlight, Toasts)
