@@ -1,0 +1,14 @@
+{
+  "name": "symbiosis-hr-payroll-system",
+  "version": "1.0.0",
+  "description": "Multi-tenant prototype for Symbiosis HR Payroll System optimized for India-based labor compliance",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

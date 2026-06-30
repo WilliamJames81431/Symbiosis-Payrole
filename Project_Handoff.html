@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symbiosis HR Payroll — Project Handoff Document</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+    :root {
+      --primary: #0071e3; --primary-light: #e8f1fc;
+      --text-h: #1d1d1f; --text-body: #3a3a3c; --text-muted: #6e6e73;
+      --border: #d2d2d7; --bg: #f5f5f7; --card: #ffffff;
+      --success: #24a148; --warning: #b86b00; --danger: #cc3025;
+      --code-bg: #f0f4ff; --code-color: #0051a2;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text-body); line-height: 1.75; -webkit-font-smoothing: antialiased; }
+
+    /* COVER */
+    .cover {
+      background: linear-gradient(135deg, #0a0a12 0%, #0d1b3e 50%, #001a4d 100%);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 60px 40px; page-break-after: always; position: relative; overflow: hidden;
+    }
+    .cover::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(0,113,227,.18) 0%,transparent 70%); top:-100px; left:-100px; }
+    .cover::after  { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle,rgba(88,86,214,.15) 0%,transparent 70%); bottom:-50px; right:-50px; }
+    .cover-badge { background:rgba(0,113,227,.2); border:1px solid rgba(0,113,227,.4); color:#60a5fa; padding:6px 18px; border-radius:999px; font-size:.75rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:28px; position:relative; z-index:1; }
+    .cover h1 { font-size:3rem; font-weight:800; color:#fff; letter-spacing:-1px; line-height:1.1; margin-bottom:16px; position:relative; z-index:1; }
+    .cover h1 span { color:#60a5fa; }
+    .cover-sub { font-size:1.1rem; color:rgba(255,255,255,.6); margin-bottom:48px; max-width:500px; line-height:1.6; position:relative; z-index:1; }
+    .cover-chips { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:60px; position:relative; z-index:1; }
+    .chip { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:rgba(255,255,255,.85); padding:6px 14px; border-radius:8px; font-size:.78rem; font-weight:500; font-family:'Fira Code',monospace; }
+    .cover-meta { border-top:1px solid rgba(255,255,255,.1); padding-top:32px; display:flex; gap:48px; justify-content:center; position:relative; z-index:1; }
+    .cover-meta-label { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,.4); margin-bottom:4px; }
+    .cover-meta-val { font-size:.9rem; font-weight:600; color:rgba(255,255,255,.85); }
+
+    /* LAYOUT */
+    .page { max-width:900px; margin:0 auto; padding:60px 48px; }
+    .print-tip { background:#fff8e1; border:1px solid #ffd54f; border-radius:10px; padding:14px 20px; font-size:.84rem; color:#6d4c00; margin-bottom:28px; display:flex; align-items:center; gap:10px; }
+    @media print { .print-tip { display:none; } body { background:white; } .cover,.pre { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+
+    /* TOC */
+    .toc-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:36px 40px; margin-bottom:48px; box-shadow:0 4px 20px rgba(0,0,0,.04); }
+    .toc-title { font-size:1.1rem; font-weight:700; color:var(--text-h); margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .toc-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 32px; }
+    .toc-item { font-size:.85rem; color:var(--primary); padding:5px 0; border-bottom:1px dashed #e5e5e7; display:flex; gap:10px; align-items:baseline; }
+    .toc-num { font-weight:700; font-size:.75rem; color:var(--text-muted); min-width:20px; }
+
+    /* SECTIONS */
+    .section { margin-bottom:52px; page-break-inside:avoid; }
+    .section-header { display:flex; align-items:center; gap:14px; margin-bottom:20px; padding-bottom:14px; border-bottom:2px solid var(--border); }
+    .section-num { background:var(--primary); color:white; font-size:.78rem; font-weight:800; width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    h2 { font-size:1.3rem; font-weight:700; color:var(--text-h); letter-spacing:-.3px; }
+    h3 { font-size:1rem; font-weight:700; color:var(--text-h); margin:20px 0 10px; }
+    p { margin-bottom:12px; font-size:.9rem; }
+    ul, ol { padding-left:20px; margin-bottom:12px; }
+    li { font-size:.88rem; margin-bottom:5px; line-height:1.6; }
+    li strong { color:var(--text-h); }
+
+    /* TABLE */
+    .table-wrap { overflow-x:auto; margin:16px 0; border-radius:10px; border:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:.84rem; }
+    th { background:var(--bg); color:var(--text-muted); font-weight:700; font-size:.73rem; text-transform:uppercase; letter-spacing:.5px; padding:12px 16px; border-bottom:1px solid var(--border); text-align:left; }
+    td { padding:12px 16px; border-bottom:1px solid var(--border); color:var(--text-body); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    code { font-family:'Fira Code',monospace; font-size:.82em; background:var(--code-bg); color:var(--code-color); padding:2px 7px; border-radius:5px; border:1px solid #d6e4ff; }
+    pre { background:#0d1117; color:#e6edf3; border-radius:12px; padding:20px 24px; overflow-x:auto; margin:16px 0; font-family:'Fira Code',monospace; font-size:.82rem; line-height:1.7; border:1px solid #30363d; }
+    pre code { background:none; color:inherit; padding:0; border:none; }
+
+    /* INFO BOX */
+    .info-box { border-radius:10px; padding:16px 20px; margin:16px 0; font-size:.88rem; line-height:1.6; display:flex; gap:12px; align-items:flex-start; }
+    .info-box.blue  { background:#e8f1fc; border-left:4px solid var(--primary); color:#0040a0; }
+    .info-box.green { background:#e6f4ec; border-left:4px solid var(--success); color:#1a6632; }
+    .info-box.orange{ background:#fff3e0; border-left:4px solid var(--warning); color:var(--warning); }
+    .info-icon { font-size:1.1rem; flex-shrink:0; }
+
+    /* ROLE CARDS */
+    .roles-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:16px 0; }
+    .role-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+    .role-icon { font-size:1.8rem; margin-bottom:10px; }
+    .role-title { font-weight:700; font-size:.9rem; color:var(--text-h); margin-bottom:6px; }
+    .role-cred { font-family:'Fira Code',monospace; font-size:.75rem; background:var(--code-bg); color:var(--code-color); padding:3px 8px; border-radius:5px; display:inline-block; margin-bottom:10px; }
+    .role-desc { font-size:.78rem; color:var(--text-muted); line-height:1.5; }
+
+    /* FEATURE CARDS */
+    .features-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0; }
+    .feature-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+    .feature-tag { font-size:1.2rem; margin-bottom:8px; }
+    .feature-title { font-weight:700; font-size:.88rem; color:var(--text-h); margin-bottom:6px; }
+    .feature-desc { font-size:.78rem; color:var(--text-muted); line-height:1.55; }
+
+    /* STEPS */
+    .steps { display:flex; flex-direction:column; gap:12px; margin:16px 0; }
+    .step { display:flex; gap:14px; align-items:flex-start; }
+    .step-num { background:var(--primary); color:white; font-weight:800; font-size:.75rem; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+    .step-title { font-weight:600; font-size:.88rem; color:var(--text-h); }
+    .step-desc { font-size:.8rem; color:var(--text-muted); margin-top:2px; }
+
+    /* TIMELINE */
+    .timeline { position:relative; padding-left:24px; margin:16px 0; }
+    .timeline::before { content:''; position:absolute; left:8px; top:0; bottom:0; width:2px; background:var(--border); }
+    .timeline-item { position:relative; margin-bottom:18px; }
+    .timeline-dot { position:absolute; left:-20px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--primary); border:2px solid white; box-shadow:0 0 0 2px var(--primary); }
+    .timeline-num { font-size:.72rem; font-weight:700; color:var(--primary); margin-bottom:2px; }
+    .timeline-text { font-size:.85rem; color:var(--text-body); }
+    .timeline-text strong { color:var(--text-h); }
+
+    /* FOOTER */
+    .doc-footer { text-align:center; padding:40px 0 20px; border-top:1px solid var(--border); margin-top:40px; font-size:.75rem; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-badge">Full Project Handoff Document</div>
+  <h1>Symbiosis <span>HR Payroll</span><br>System Prototype</h1>
+  <p class="cover-sub">A complete technical record of every decision made, every feature built, and the full architecture of this India-compliant payroll prototype.</p>
+  <div class="cover-chips">
+    <span class="chip">Vanilla JS</span>
+    <span class="chip">Vite 5.4</span>
+    <span class="chip">localStorage DB</span>
+    <span class="chip">CSS Variables</span>
+    <span class="chip">Dark Mode</span>
+    <span class="chip">India Compliance</span>
+    <span class="chip">No Backend</span>
+  </div>
+  <div class="cover-meta">
+    <div><div class="cover-meta-label">App Logic</div><div class="cover-meta-val">~4,550 lines</div></div>
+    <div><div class="cover-meta-label">Styles</div><div class="cover-meta-val">~2,050 lines</div></div>
+    <div><div class="cover-meta-label">Roles</div><div class="cover-meta-val">ERP · HR · Employee</div></div>
+    <div><div class="cover-meta-label">Location</div><div class="cover-meta-val">Documents\Payrole</div></div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="print-tip">
+    💡 <strong>To save as PDF:</strong> Press <strong>Ctrl + P</strong> → Change destination to <strong>"Save as PDF"</strong> → Click Save
+  </div>
+
+  <div class="toc-card">
+    <div class="toc-title">📋 Table of Contents</div>
+    <div class="toc-grid">
+      <div class="toc-item"><span class="toc-num">01</span> What Is This Project?</div>
+      <div class="toc-item"><span class="toc-num">12</span> India Compliance Features</div>
+      <div class="toc-item"><span class="toc-num">02</span> The Three User Roles</div>
+      <div class="toc-item"><span class="toc-num">13</span> Attendance CSV Upload Wizard</div>
+      <div class="toc-item"><span class="toc-num">03</span> Database Architecture</div>
+      <div class="toc-item"><span class="toc-num">14</span> Payroll Sandbox</div>
+      <div class="toc-item"><span class="toc-num">04</span> Payroll Calculation Engine</div>
+      <div class="toc-item"><span class="toc-num">15</span> OTP Email Simulation</div>
+      <div class="toc-item"><span class="toc-num">05</span> Global State Object</div>
+      <div class="toc-item"><span class="toc-num">16</span> Database Explorer</div>
+      <div class="toc-item"><span class="toc-num">06</span> Rendering Architecture</div>
+      <div class="toc-item"><span class="toc-num">17</span> Current File Sizes</div>
+      <div class="toc-item"><span class="toc-num">07</span> HR Dashboard Tabs</div>
+      <div class="toc-item"><span class="toc-num">18</span> Prototype vs. Production</div>
+      <div class="toc-item"><span class="toc-num">08</span> Canvas Charts</div>
+      <div class="toc-item"><span class="toc-num">19</span> How To Run</div>
+      <div class="toc-item"><span class="toc-num">09</span> CSS Design System</div>
+      <div class="toc-item"><span class="toc-num">20</span> Login Credentials</div>
+      <div class="toc-item"><span class="toc-num">10</span> Dark Mode Bug Fixes (40+)</div>
+      <div class="toc-item"><span class="toc-num">21</span> User Request History</div>
+      <div class="toc-item"><span class="toc-num">11</span> Premium UI Features</div>
+      <div class="toc-item"><span class="toc-num">22</span> For Next AI Assistant</div>
+    </div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">1</div><h2>What Is This Project?</h2></div>
+    <div class="info-box blue">
+      <span class="info-icon">💡</span>
+      <span>A <strong>100% client-side HR Payroll web application</strong> built as a prototype for the Indian market. No backend. No server. No API calls. Everything runs in the browser using <code>localStorage</code> as the persistence layer.</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Technology</th><th>Choice</th><th>Reason</th></tr>
+        <tr><td>Build Tool</td><td><code>Vite 5.4.21</code></td><td>Fast hot reload, ES modules, zero-config</td></tr>
+        <tr><td>Language</td><td>Vanilla JavaScript</td><td>No framework overhead, full control</td></tr>
+        <tr><td>Styling</td><td>Vanilla CSS (2,050+ lines)</td><td>CSS variables for theming, no Tailwind</td></tr>
+        <tr><td>Persistence</td><td><code>localStorage</code></td><td>Simulates a real DB — no server needed</td></tr>
+        <tr><td>Fonts</td><td>Inter + Fira Code (Google Fonts)</td><td>Apple-style UI, monospace for numbers</td></tr>
+        <tr><td>Project path</td><td><code>c:\Users\Dell\Documents\Payrole\</code></td><td>User's workspace</td></tr>
+      </table>
+    </div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <tr><th>File</th><th>Purpose</th><th>Size</th></tr>
+        <tr><td><code>index.html</code></td><td>App shell, modal containers, Spotlight overlay, Toast container</td><td>~5 KB</td></tr>
+        <tr><td><code>styles.css</code></td><td>All styling — CSS variables, dark mode, animations, all components</td><td>~68 KB</td></tr>
+        <tr><td><code>app.js</code></td><td>All logic — DB engine, payroll calculations, rendering, UI features</td><td>~204 KB</td></tr>
+        <tr><td><code>package.json</code></td><td>Vite config, project metadata, scripts</td><td>—</td></tr>
+        <tr><td><code>sample_attendance.csv</code></td><td>Demo CSV for testing the attendance upload wizard</td><td>—</td></tr>
+        <tr><td><code>dist/</code></td><td>Production build output (<code>npm run build</code>)</td><td>—</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">2</div><h2>The Three User Roles</h2></div>
+    <div class="roles-grid">
+      <div class="role-card">
+        <div class="role-icon">🏢</div>
+        <div class="role-title">ERP Admin</div>
+        <div class="role-cred">admin / admin123</div>
+        <div class="role-desc">Master-level access. Sees all organizations. Can impersonate any HR admin to switch into their org view.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon">👔</div>
+        <div class="role-title">HR Admin</div>
+        <div class="role-cred">hr_tata / hr123</div>
+        <div class="role-desc">Org-specific. Manages employees, uploads attendance CSVs, runs payroll sandbox, handles compliance downloads.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon">👤</div>
+        <div class="role-title">Employee</div>
+        <div class="role-cred">EMP101 / emp123</div>
+        <div class="role-desc">Self-service portal. Views own payslip, salary breakdown, submits 80C/80D/HRA tax declarations.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">3</div><h2>Database Architecture (localStorage)</h2></div>
+    <p>The <code>LocalDatabase</code> class (~line 60 in <code>app.js</code>) simulates a full relational DB using named <code>localStorage</code> keys. All CRUD is through helper methods on this class.</p>
+    <div class="table-wrap">
+      <table>
+        <tr><th>localStorage Key</th><th>Data Stored</th><th>Structure</th></tr>
+        <tr><td><code>symbiosis_organizations</code></td><td>All org records</td><td>Array of org objects</td></tr>
+        <tr><td><code>symbiosis_employees</code></td><td>All employees across all orgs</td><td>Array of employee objects</td></tr>
+        <tr><td><code>symbiosis_attendance</code></td><td>Attendance records</td><td><code>{org_id: {'YYYY-MM': [...rows]}}</code></td></tr>
+        <tr><td><code>symbiosis_payroll_ledger</code></td><td>Locked payroll records</td><td><code>{org_id: {'YYYY-MM': {status, records}}}</code></td></tr>
+        <tr><td><code>symbiosis_schemas</code></td><td>CSV column mappings</td><td>Nested by org ID</td></tr>
+        <tr><td><code>symbiosis_db_version</code></td><td>Version string</td><td>Triggers migration if !== '1.2'</td></tr>
+        <tr><td><code>symbiosis_session</code></td><td>Login state</td><td>role, orgId, tab, monthYear</td></tr>
+        <tr><td><code>symbiosis_ui_theme</code></td><td>Theme preference</td><td><code>'light'</code> or <code>'dark'</code></td></tr>
+      </table>
+    </div>
+    <div class="info-box green">
+      <span class="info-icon">🌱</span>
+      <span><strong>Seed Data:</strong> 3 orgs (TCS, Infosys, Reliance), 7 employees, June 2026 attendance pre-loaded for TCS, May 2026 payroll locked for TCS. Version migration adds new fields to existing records without wiping data.</span>
+    </div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">4</div><h2>Payroll Calculation Engine</h2></div>
+    <p>Core function: <code>calculatePayrollForEmployee()</code> (~line 400, <code>app.js</code>)</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">A</div><div class="step-content"><div class="step-title">Determine Working Days</div><div class="step-desc">Calendar days in month. Checks <code>doj</code> (joined mid-month → prorate from that date). Checks <code>exit_date</code> (left mid-month → prorate to that date). Counts P + EL + CO days from attendance. Payable = min(eligible, worked).</div></div></div>
+      <div class="step"><div class="step-num">B</div><div class="step-content"><div class="step-title">Calculate Gross Salary</div><div class="step-desc"><code>Basic = CTC × basic_pct%</code> &nbsp;·&nbsp; <code>HRA = Basic × 40%</code> &nbsp;·&nbsp; <code>Special Allowance = CTC - Basic - HRA</code> &nbsp;·&nbsp; <code>Gross = (CTC ÷ calendar_days) × payable_days + OT_pay</code></div></div></div>
+      <div class="step"><div class="step-num">C</div><div class="step-content"><div class="step-title">Statutory Deductions (India)</div><div class="step-desc"><strong>EPF:</strong> 12% of Basic, capped ₹1,800/month (wage ceiling ₹15,000) &nbsp;·&nbsp; <strong>ESI:</strong> 0.75% if Gross ≤ ₹21,000 &nbsp;·&nbsp; <strong>PT:</strong> State-specific slabs from <code>PT_TABLES</code> (5 states) &nbsp;·&nbsp; <strong>TDS:</strong> Fixed rate or auto-computed annual TDS from slabs</div></div></div>
+      <div class="step"><div class="step-num">D</div><div class="step-content"><div class="step-title">HRA Exemption — Section 10(13A)</div><div class="step-desc"><code>Exempt = min(actual_HRA_received, basic × 50% metro / 40% non-metro, rent_paid − basic × 10%)</code></div></div></div>
+      <div class="step"><div class="step-num">E</div><div class="step-content"><div class="step-title">Net Pay</div><div class="step-desc"><code>Net = Gross − EPF − ESI − PT − TDS + sandboxAdjustments[emp_id]</code></div></div></div>
+    </div>
+  </div>
+
+  <!-- SECTION 5 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">5</div><h2>Global State Object</h2></div>
+    <pre><code>const state = {
+  isLoggedIn: false,
+  currentRole: null,           // 'ERP' | 'HR' | 'Employee'
+  currentOrgId: null,          // e.g. 'org_tata'
+  currentUserId: null,         // e.g. 'EMP101' (for Employee role)
+  activeTab: null,             // current active sidebar tab name
+  activeMonthYear: '2026-06',  // YYYY-MM — drives all payroll calc
+  currentTheme: 'classic-corporate',
+  sandboxAdjustments: {},      // { emp_id: { amount, reason } }
+}</code></pre>
+    <p>Saved to <code>localStorage('symbiosis_session')</code> on every meaningful change. Restored on page load before first render. <code>activeMonthYear</code> is the single source of truth for which month's payroll is being processed.</p>
+  </div>
+
+  <!-- SECTION 6 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">6</div><h2>Rendering Architecture</h2></div>
+    <p>Manual SPA — no router library. Navigation = DOM replacement via <code>innerHTML</code>.</p>
+    <pre><code>// Entry Point
+window.onload → loadSessionState() → renderCurrentView()
+
+// renderCurrentView() decision tree:
+if (!state.isLoggedIn)           → showLoginScreen() + renderLoginPage()
+if (state.currentRole === 'ERP') → showAppShell() + buildSidebar() + renderERPTab()
+if (state.currentRole === 'HR')  → showAppShell() + buildSidebar() + renderHRTab()
+if (state.currentRole === 'Emp') → showAppShell() + buildSidebar() + renderEmployeeTab()
+
+// renderMainContent() — enhanced with skeleton loaders:
+step 1: inject shimmer skeleton HTML into document.getElementById('app-body')
+step 2: setTimeout(150ms)
+step 3: call actual render function → replaces skeleton with real content
+
+// Tab switching:
+switchTab(tabName) → state.activeTab = tabName → saveSession() → renderCurrentView()</code></pre>
+  </div>
+
+  <!-- SECTION 7 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">7</div><h2>HR Dashboard Tabs</h2></div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Tab ID</th><th>Content</th></tr>
+        <tr><td><code>dashboard</code></td><td>Stat cards (Total Employees, Gross Payroll, EPF Liability, Avg Net Pay), department donut chart, attendance bar chart</td></tr>
+        <tr><td><code>employees</code></td><td>Employee table with search, add/edit/delete modals, bulk CSV upload</td></tr>
+        <tr><td><code>attendance</code></td><td>3-step CSV upload wizard, attendance matrix grid view per employee</td></tr>
+        <tr><td><code>payroll</code></td><td>Payroll sandbox — run calculations, inline adjustments, approve &amp; lock</td></tr>
+        <tr><td><code>compliance</code></td><td>EPF ECR file download, ESI return, PT challan, bank payout CSV</td></tr>
+        <tr><td><code>ledger</code></td><td>View historical locked payroll records by month</td></tr>
+        <tr><td><code>tax</code></td><td>Employee tax declarations, Form 12BB preview, Form 16 simulation</td></tr>
+        <tr><td><code>reports</code></td><td>Summary reports (placeholder for future expansion)</td></tr>
+        <tr><td><code>settings</code></td><td>Org configuration — EPF wage ceiling, state PT selection, OT rate</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 8 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">8</div><h2>Canvas Charts (Interactive)</h2></div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">🍩</div>
+        <div class="feature-title">Department Donut Chart</div>
+        <div class="feature-desc">Draws ring arcs per department. Mousemove hit-tests using distance-from-center + angle math. Hovered arc expands +5px radius and +4px line width. Floating tooltip at cursor. Animates from 0° to full over 20 frames (animProgress += 0.05).</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">📊</div>
+        <div class="feature-title">Attendance Bar Chart</div>
+        <div class="feature-desc">Counts P/A/EL/WO across all employees. 4 color-coded vertical bars. Mousemove checks bounding rect of each bar. Hovered bar gets glowing shadow. Bars animate growing upward from 0 height over 20 frames. Shared tooltip div.</div>
+      </div>
+    </div>
+    <p>Both charts share one <code>div#chart-tooltip</code> appended to <code>document.body</code>, positioned at <code>e.clientX / e.clientY</code> via absolute positioning.</p>
+  </div>
+
+  <!-- SECTION 9 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">9</div><h2>CSS Design System</h2></div>
+    <p>The entire visual design is driven by CSS custom properties. Dark mode overrides the same variable names in <code>[data-theme="dark"]</code> — no component-level changes needed.</p>
+    <pre><code>/* Light Mode (:root)          */   /* Dark Mode ([data-theme="dark"]) */
+--primary:     #0071e3             --primary:     #0a84ff   /* neon blue    */
+--body-bg:     #fbfbfd             --body-bg:     #000000   /* pure black   */
+--card-bg:     #ffffff             --card-bg:     #1c1c1e   /* dark gray    */
+--card-border: #e5e5e7             --card-border: #38383a
+--text-h:      #1d1d1f             --text-h:      #ffffff
+--text-body:   #424245             --text-body:   #e5e5ea
+--text-muted:  #86868b             --text-muted:  #8e8e93
+--sidebar-bg:  #1d1d1f             --sidebar-bg:  #000000   /* always dark  */
+--success:     #24a148             --success:     #32d74b
+--danger:      #ff3b30             --danger:      #ff453a
+--warning:     #ff9500             --warning:     #ffd60a
+--primary-light:#deeeff            --primary-light:rgba(10,132,255,0.1)
+--primary-glow: rgba(0,113,227,.15) --primary-glow:rgba(10,132,255,0.2)</code></pre>
+    <p>Toggle: <code>document.documentElement.setAttribute('data-theme', 'dark')</code>. Preference persisted via <code>localStorage('symbiosis_ui_theme')</code>, applied by <code>initTheme()</code> before first render.</p>
+  </div>
+
+  <!-- SECTION 10 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">10</div><h2>Dark Mode Bug Fixes — 40+ Hardcoded Colors</h2></div>
+    <div class="info-box orange">
+      <span class="info-icon">⚠️</span>
+      <span>A full CSS audit found <strong>40+ hardcoded color values</strong> (<code>#ffffff</code>, <code>#f5f5f7</code>, <code>rgba(255,255,255,0.04)</code>) that were invisible or jarring in dark mode. Every one was replaced with a CSS variable.</span>
+    </div>
+    <div class="table-wrap" style="margin-top:14px">
+      <table>
+        <tr><th>Component</th><th>Broken Value</th><th>Fixed To</th></tr>
+        <tr><td>All form inputs + selects</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Form focus state</td><td><code>#ffffff</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>Profile dropdown</td><td><code>#ffffff</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>Topbar bell button</td><td><code>rgba(255,255,255,0.04)</code> — invisible in light</td><td><code>var(--card-border)</code></td></tr>
+        <tr><td>Profile container hover</td><td><code>rgba(255,255,255,0.04)</code> — invisible in light</td><td><code>var(--primary-light)</code></td></tr>
+        <tr><td>Table <code>&lt;th&gt;</code> headers</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Table row hover</td><td><code>#f5f5f7</code></td><td><code>var(--primary-light)</code></td></tr>
+        <tr><td>Wizard modal body</td><td><code>#ffffff</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>Wizard header + footer</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Payslip modal</td><td><code>#ffffff</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>Payslip meta grid</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Database console panel</td><td><code>rgba(255,255,255,0.95)</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>DB inspector columns</td><td><code>#ffffff</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>DB column headers</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>JSON preview text</td><td><code>#333333</code></td><td><code>var(--text-body)</code></td></tr>
+        <tr><td>Top settings/period bar</td><td><code>#f5f5f7</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>Period/theme inputs</td><td><code>#ffffff</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Gmail OTP toast</td><td><code>rgba(255,255,255,0.95)</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>Login credentials box</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Role segmented control</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Net payout amount</td><td><code>#165324</code> — dark green, invisible</td><td><code>var(--success)</code></td></tr>
+        <tr><td>All 6 badge types</td><td>Hardcoded hex colors</td><td>CSS semantic variables</td></tr>
+        <tr><td>7 attendance day badge types</td><td>Hardcoded hex colors</td><td>CSS semantic variables</td></tr>
+        <tr><td>Warning list text</td><td><code>#c2410c</code></td><td><code>var(--warning)</code></td></tr>
+        <tr><td>Scrollbar thumb</td><td><code>#334155</code> — always dark</td><td><code>var(--card-border)</code></td></tr>
+        <tr><td>Range sliders</td><td><code>rgba(255,255,255,0.1)</code></td><td><code>var(--card-border)</code> + <code>accent-color</code></td></tr>
+        <tr><td>Employee chips</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Upload dropzone</td><td><code>#f5f5f7</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Detail row inline code</td><td><code>#f5f5f7</code></td><td><code>var(--primary-light)</code></td></tr>
+        <tr><td>Mapping row inputs</td><td><code>#ffffff</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Comparison columns</td><td><code>#ffffff</code></td><td><code>var(--card-bg)</code></td></tr>
+        <tr><td>Adjustment inputs</td><td><code>#ffffff</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Aux form selects</td><td><code>#ffffff</code></td><td><code>var(--body-bg)</code></td></tr>
+        <tr><td>Console header buttons</td><td><code>#f5f5f7</code> / <code>#e5e5ea</code></td><td><code>var(--body-bg)</code> / <code>var(--card-border)</code></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 11 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">11</div><h2>Premium UI Features Added</h2></div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">🌙</div>
+        <div class="feature-title">Dark / Light Mode Toggle</div>
+        <div class="feature-desc">Button in topbar (moon/sun icon). <code>toggleTheme()</code> flips <code>data-theme</code> on <code>&lt;html&gt;</code>. Saved to localStorage. <code>initTheme()</code> restores preference before first render. Charts re-draw with correct colors after toggle.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">🔍</div>
+        <div class="feature-title">Spotlight Search (Ctrl+K)</div>
+        <div class="feature-desc">Global keyboard shortcut. Blurred glass overlay. Searches employees by name/ID + quick actions. Each result is clickable and executes immediately. ESC closes. <code>handleSpotlightInput()</code> → <code>renderSpotlightResults()</code> on each keystroke.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">💀</div>
+        <div class="feature-title">Skeleton Loaders</div>
+        <div class="feature-desc"><code>renderMainContent()</code> first injects shimmer placeholder divs (150ms), then replaces with real content. Uses CSS <code>skeletonShimmer</code> gradient animation. Makes tab switching feel fast and native.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">🔔</div>
+        <div class="feature-title">macOS-Style Stacking Toasts</div>
+        <div class="feature-desc"><code>showNotificationToast(title, msg, type)</code> creates toasts that stack in top-right. Colored left-border accent, icon, auto-dismiss after 4s. <code>toastIn</code> slide+scale in, <code>toastOut</code> slide out with height collapse.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">📈</div>
+        <div class="feature-title">Animated Canvas Charts</div>
+        <div class="feature-desc">Both charts animate on draw (20-frame easing). Hover triggers floating tooltip positioned at cursor. Hovered elements expand/glow. All via shared <code>div#chart-tooltip</code> on <code>document.body</code>.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">✨</div>
+        <div class="feature-title">Animation Suite</div>
+        <div class="feature-desc">Sidebar nav: <code>translateX(4px)</code> on hover. Org cards: <code>translateY(-2px)</code> lift. Stat cards: staggered <code>fadeUp</code> entrance (nth-child delays). Bell dot: infinite <code>bellPulse</code>. Theme toggle: rotates 20° on hover. Day badges: <code>scale(1.2)</code> on hover. <code>prefers-reduced-motion</code> guard added.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 12 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">12</div><h2>India Compliance Features</h2></div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Feature</th><th>Details</th></tr>
+        <tr><td><strong>EPF (EPFO)</strong></td><td>12% employee + 12% employer contribution. ₹15,000 wage ceiling → max ₹1,800 employee deduction/month. Toggle per employee via <code>epf_eligible</code> flag.</td></tr>
+        <tr><td><strong>ESI (ESIC)</strong></td><td>0.75% employee contribution only if Gross ≤ ₹21,000/month. Toggle via <code>esi_eligible</code> flag.</td></tr>
+        <tr><td><strong>Professional Tax</strong></td><td>State-specific slabs in <code>PT_TABLES</code> object: Telangana, Karnataka, Maharashtra, Tamil Nadu, West Bengal.</td></tr>
+        <tr><td><strong>TDS / Income Tax</strong></td><td>Auto-computed using FY 2026-27 slabs. Supports deductions: 80C, 80D, HRA exemption, standard deduction ₹50,000. Or fixed <code>tds_rate</code> per employee.</td></tr>
+        <tr><td><strong>HRA Exemption</strong></td><td>Section 10(13A) three-way minimum formula. Metro vs. non-metro flag per employee.</td></tr>
+        <tr><td><strong>Form 12BB</strong></td><td>Employee tax declaration form — digital input, printable output.</td></tr>
+        <tr><td><strong>Form 16</strong></td><td>Annual tax certificate — simulated for the fiscal year.</td></tr>
+        <tr><td><strong>EPF ECR File</strong></td><td>Downloadable EPFO Electronic Challan cum Return in the prescribed format.</td></tr>
+        <tr><td><strong>Bank Payout CSV</strong></td><td>Bank transfer format with employee name, account number, IFSC, net pay amount.</td></tr>
+        <tr><td><strong>KYC Validation</strong></td><td>PAN format check (AAAAA9999A), Aadhaar format check (12 digits).</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 13 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">13</div><h2>Attendance CSV Upload Wizard</h2></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Upload Step</div><div class="step-desc">Drag-and-drop zone or click to browse. Accepts <code>.csv</code> files. Parses using JavaScript's <code>FileReader</code> API.</div></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Column Mapping</div><div class="step-desc">Maps CSV columns → system fields: Employee ID, Name, D1–D31 day columns, OT hours. Schema is persisted per-org in localStorage so next upload auto-maps columns.</div></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Name Mismatch Resolution</div><div class="step-desc">If CSV employee names don't match DB names, shows a side-by-side comparison table and asks HR to confirm or override each mismatch.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Import</div><div class="step-desc">Saves mapped attendance object to <code>symbiosis_attendance[org_id][YYYY-MM]</code>. Confirmation toast shown. Tab refreshes with new data.</div></div></div>
+    </div>
+  </div>
+
+  <!-- SECTION 14 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">14</div><h2>Payroll Sandbox</h2></div>
+    <ul>
+      <li>Shows calculated <strong>Gross, EPF, ESI, PT, TDS, Net</strong> for every employee in a table</li>
+      <li>Inline <strong>adjustment fields</strong> — add bonus or deduction with reason text per employee</li>
+      <li>Warning flags for: mid-month joiners, leavers, ESI-eligible employees, missing attendance data</li>
+      <li><strong>Approve &amp; Lock</strong> button — freezes payroll, status → <code>'Locked'</code>, record moves to Ledger</li>
+      <li>Locked payroll is immutable — HR can only view, not edit</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 18 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">18</div><h2>Prototype vs. Production</h2></div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Area</th><th>Prototype (Current)</th><th>Real Product Needs</th></tr>
+        <tr><td>Storage</td><td>localStorage — browser only, one device</td><td>PostgreSQL / MySQL + Redis</td></tr>
+        <tr><td>Authentication</td><td>Hardcoded passwords in JS source</td><td>JWT tokens + OAuth2 / SAML SSO</td></tr>
+        <tr><td>Multi-user</td><td>Single browser session, no concurrency</td><td>Real sessions + Role-Based Access Control</td></tr>
+        <tr><td>Email</td><td>Simulated Gmail toast notification</td><td>SMTP server / SendGrid / AWS SES</td></tr>
+        <tr><td>PDF generation</td><td>Browser print CSS (<code>@media print</code>)</td><td>Puppeteer / WeasyPrint / PDF microservice</td></tr>
+        <tr><td>Audit trail</td><td>Basic log array in memory</td><td>Immutable append-only audit DB table</td></tr>
+        <tr><td>Encryption</td><td>None — PAN/Aadhaar stored in plain text</td><td>AES-256 encryption, key management (KMS)</td></tr>
+        <tr><td>API layer</td><td>None — all logic inline in app.js</td><td>REST API or GraphQL with proper versioning</td></tr>
+        <tr><td>Mobile</td><td>Responsive CSS (desktop-first)</td><td>Native iOS/Android app or full PWA</td></tr>
+        <tr><td>Tax slabs</td><td>Hardcoded in JS constants</td><td>CMS-managed tax tables, annual updates</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 19 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">19</div><h2>How To Run</h2></div>
+    <pre><code>cd c:\Users\Dell\Documents\Payrole
+
+# Development server with hot reload
+npm run dev
+# Open: http://localhost:5173
+
+# Network share — expose on same Wi-Fi
+npx vite --host 0.0.0.0
+# Your machine: http://localhost:5173
+# Coworker:     http://192.168.0.186:5173
+
+# Production build (creates dist/ folder)
+npm run build
+
+# Coworker runs the built dist folder:
+cd dist
+python -m http.server 8080        # if Python installed
+npx serve .                       # if Node installed
+# Then open: http://localhost:8080</code></pre>
+  </div>
+
+  <!-- SECTION 20 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">20</div><h2>Login Credentials</h2></div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Role</th><th>Username</th><th>Password</th><th>Access</th></tr>
+        <tr><td>ERP Admin</td><td><code>admin</code></td><td><code>admin123</code></td><td>All organizations</td></tr>
+        <tr><td>HR Admin</td><td><code>hr_tata</code></td><td><code>hr123</code></td><td>TCS org only</td></tr>
+        <tr><td>HR Admin</td><td><code>hr_infy</code></td><td><code>hr123</code></td><td>Infosys org only</td></tr>
+        <tr><td>Employee</td><td><code>EMP101</code></td><td><code>emp123</code></td><td>Aarav Sharma — TCS</td></tr>
+        <tr><td>Employee</td><td><code>EMP102</code></td><td><code>emp123</code></td><td>Priya Patel — TCS</td></tr>
+        <tr><td>Employee</td><td><code>EMP104</code></td><td><code>emp123</code></td><td>Ananya Iyer — TCS</td></tr>
+        <tr><td>Employee</td><td><code>EMP201</code></td><td><code>emp123</code></td><td>Vikram Singh — Infosys</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 21 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">21</div><h2>User Request History — Chronological</h2></div>
+    <div class="timeline">
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Request 1</div><div class="timeline-text"><strong>Dark text readability</strong> → Fixed text color variables to use dark dusky tones for proper contrast on all backgrounds</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Request 2</div><div class="timeline-text"><strong>How dates are processed</strong> → Explained <code>state.activeMonthYear</code> as the driver; <code>doj</code>/<code>exit_date</code> prorate calculations</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Request 3</div><div class="timeline-text"><strong>Prototype vs. production differences</strong> → Detailed the 10 major gaps across auth, DB, encryption, email, PDF, audit trail, etc.</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Request 4</div><div class="timeline-text"><strong>Apple-style UI</strong> → Complete redesign: Inter font, pill buttons, frosted glass cards, dark charcoal sidebar, Apple color palette</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Requests 5–6</div><div class="timeline-text"><strong>"Continue" (multiple)</strong> → Completed full CSS overhaul, animations, dark mode token architecture across multiple sessions</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Request 7</div><div class="timeline-text"><strong>UI suggestions</strong> → Proposed 5 premium features: Dark Mode, Spotlight Search, Interactive Charts, Skeleton Loaders, Notification Toasts</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-text"><strong>Request 8</strong></div><div class="timeline-text"><strong>Implement all + use colours</strong> → Built all 5 features into <code>index.html</code>, <code>styles.css</code>, <code>app.js</code></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Request 9</div><div class="timeline-text"><strong>Fix everything</strong> → Comprehensive 40+ color audit, replaced every hardcoded color, enhanced all animations throughout</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-num">Request 10</div><div class="timeline-text"><strong>Share with coworker</strong> → Network share via <code>--host 0.0.0.0</code>, then ZIP + dist folder running instructions</div></div>
+    </div>
+  </div>
+
+  <!-- SECTION 22 -->
+  <div class="section">
+    <div class="section-header"><div class="section-num">22</div><h2>For the Next AI Assistant</h2></div>
+    <div class="info-box blue">
+      <span class="info-icon">🤖</span>
+      <div>
+        <strong>If you are a Gemini assistant picking up this project:</strong><br><br>
+        1. The full source is at <code>c:\Users\Dell\Documents\Payrole\</code> — read <code>app.js</code> and <code>styles.css</code>.<br>
+        2. The CSS theme system uses <code>[data-theme="dark"]</code> on <code>&lt;html&gt;</code> — always use CSS variables, never hardcode colors.<br>
+        3. All rendering is template-literal HTML strings injected via <code>innerHTML</code> — no framework.<br>
+        4. State lives in the <code>state</code> object + localStorage. Never modify the DB directly — use <code>LocalDatabase</code> methods.<br>
+        5. The payroll calculation is Indian-law-compliant — be careful modifying <code>calculatePayrollForEmployee()</code>.<br>
+        6. Run <code>npm run dev</code> to start, <code>npm run build</code> to build. Vite v5.4.21.
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    Symbiosis HR Payroll System — Full Project Handoff &nbsp;·&nbsp; Generated by Antigravity (Google DeepMind) &nbsp;·&nbsp; June 2026
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: symbiosis_postgres
+    environment:
+      POSTGRES_USER: symbiosis
+      POSTGRES_PASSWORD: symbiosis_dev_pass
+      POSTGRES_DB: symbiosis_hrms
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U symbiosis -d symbiosis_hrms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - symbiosis_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: symbiosis_redis
+    command: redis-server --requirepass symbiosis_redis_pass --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "symbiosis_redis_pass", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - symbiosis_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: symbiosis_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: symbiosis_minio
+      MINIO_ROOT_PASSWORD: symbiosis_minio_pass
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - symbiosis_net
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: symbiosis_mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - symbiosis_net
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  symbiosis_net:
+    driver: bridge

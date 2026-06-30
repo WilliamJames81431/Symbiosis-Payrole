@@ -1,0 +1,33 @@
+{
+  "name": "symbiosis-hrms",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Symbiosis Enterprise HRMS & Payroll Platform v2.0",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend && npm run test --workspace=frontend",
+    "docker:up": "docker-compose -f docker/docker-compose.dev.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.dev.yml down",
+    "docker:logs": "docker-compose -f docker/docker-compose.dev.yml logs -f",
+    "migrate": "npm run migrate --workspace=backend",
+    "seed": "npm run seed --workspace=backend",
+    "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

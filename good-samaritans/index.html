@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Good Samaritans — A faith-driven initiative dedicated to serving God's workers, caring for the poor, and sharing Christ's love.">
+    <meta name="keywords" content="Good Samaritans, charity, donate, missionaries, Christian ministry, Gospel outreach">
+    <meta name="author" content="Good Samaritans">
+    <meta name="theme-color" content="#0d6eaa">
+    <meta property="og:title" content="Good Samaritans — Love Your Neighbour">
+    <meta property="og:description" content="Serving God's workers, caring for the poor, and sharing Christ's love.">
+    <meta property="og:type" content="website">
+    <title>Good Samaritans — Love Your Neighbour</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader-content">
+            <div class="loader-heart">
+                <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+            </div>
+            <p class="loader-text">Good Samaritans</p>
+            <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- SCROLL PROGRESS -->
+    <div id="scroll-progress" class="scroll-progress"></div>
+
+    <!-- NAVIGATION -->
+    <nav id="navbar" class="navbar">
+        <div class="nav-container">
+            <a href="#hero" class="nav-logo" id="nav-logo-link">
+                <img id="nav-logo-img" src="images/logo.png" alt="Good Samaritans Logo" class="nav-logo-image">
+                <div class="logo-text">
+                    <span class="logo-name" id="nav-org-name">Good Samaritans</span>
+                    <span class="logo-tagline" id="nav-tagline">Love Your Neighbour</span>
+                </div>
+            </a>
+            <ul class="nav-links" id="nav-links">
+                <!-- Populated dynamically by CMS -->
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+        <div class="hero-bg parallax-bg" id="hero-bg" data-speed="0.3"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-particles" id="hero-particles"></div>
+        <div class="hero-content">
+            <div class="hero-badge animate-on-scroll" data-animation="fade-in-scale">
+                <span id="hero-badge-stars">★ ★ ★</span>
+                <span id="hero-badge-year">Est. 2022</span>
+            </div>
+            <h1 class="hero-title animate-on-scroll" data-animation="fade-in-up">
+                <span class="hero-title-line" id="hero-title-1">Serving God's Workers.</span>
+                <span class="hero-title-line hero-title-italic" id="hero-title-2">Caring for the Poor.</span>
+                <span class="hero-title-line" id="hero-title-3">Sharing Christ's Love.</span>
+            </h1>
+            <div class="hero-typing-wrapper animate-on-scroll" data-animation="fade-in-up" data-delay="200">
+                <span id="typing-text" class="typing-text"></span>
+                <span class="typing-cursor">|</span>
+            </div>
+            <p class="hero-subtitle animate-on-scroll" data-animation="fade-in-up" data-delay="400" id="hero-subtitle">
+                A faith-driven initiative bringing hope, dignity, and practical help to those in need.
+            </p>
+            <div class="hero-buttons animate-on-scroll" data-animation="fade-in-up" data-delay="600">
+                <a href="#giving" class="btn btn-donate btn-donate-cta" id="hero-donate-btn">
+                    <span class="btn-icon">♥</span>
+                    <span id="hero-donate-text">Give Today</span>
+                </a>
+                <a href="#about" class="btn btn-secondary" id="hero-learn-btn">
+                    <span id="hero-learn-text">Learn More</span>
+                    <span class="btn-arrow">→</span>
+                </a>
+            </div>
+            <div class="hero-scroll-indicator animate-on-scroll" data-animation="fade-in-up" data-delay="800">
+                <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+                <span>Scroll to explore</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="about section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <div class="section-label animate-on-scroll" data-animation="fade-in-left" id="about-label">About</div>
+                    <h2 class="section-title animate-on-scroll" data-animation="fade-in-left" data-delay="100" id="about-title">Good Samaritans</h2>
+                    <p class="about-description animate-on-scroll" data-animation="fade-in-left" data-delay="200" id="about-desc"></p>
+                    <div class="about-highlight animate-on-scroll" data-animation="fade-in-left" data-delay="300">
+                        <div class="highlight-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        </div>
+                        <p id="about-highlight"></p>
+                    </div>
+                </div>
+                <div class="about-scripture animate-on-scroll" data-animation="fade-in-up" data-delay="200">
+                    <div class="scripture-card">
+                        <div class="scripture-quote-mark">"</div>
+                        <blockquote class="scripture-text" id="about-scripture-text"></blockquote>
+                        <cite class="scripture-ref" id="about-scripture-ref"></cite>
+                    </div>
+                </div>
+                <div class="about-image animate-on-scroll" data-animation="fade-in-right" data-delay="300">
+                    <div class="about-image-wrapper">
+                        <img id="about-img" data-src="images/about-image.png" alt="A child smiling with hope" class="lazy-image">
+                        <div class="about-image-accent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VISION -->
+    <section id="vision" class="vision section">
+        <div class="vision-bg parallax-bg" id="vision-bg" data-speed="0.5"></div>
+        <div class="vision-overlay"></div>
+        <div class="container vision-content">
+            <div class="vision-card glassmorphism animate-on-scroll" data-animation="fade-in-scale">
+                <div class="vision-label">
+                    <span class="vision-label-icon">✦</span>
+                    <span id="vision-label-text">Our Vision</span>
+                </div>
+                <h2 class="vision-title" id="vision-title">Building a Community of Compassion & Faith in Action</h2>
+                <p class="vision-text" id="vision-text"></p>
+                <div class="vision-divider"></div>
+                <p class="vision-verse" id="vision-verse"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats section">
+        <div class="container">
+            <div class="stats-grid" id="stats-grid">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- IMPACT CARDS -->
+    <section id="impact" class="impact section">
+        <div class="container">
+            <div class="section-header animate-on-scroll" data-animation="fade-in-up">
+                <div class="section-label center" id="impact-label">How Your Support Helps</div>
+                <h2 class="section-title center" id="impact-title">Making a Difference, One Life at a Time</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="impact-cards" id="impact-cards">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- GIVING -->
+    <section id="giving" class="giving section">
+        <div class="giving-bg-decoration">
+            <div class="floating-heart" style="top: 10%; left: 5%; animation-delay: 0s;">♥</div>
+            <div class="floating-heart" style="top: 20%; right: 8%; animation-delay: 1.5s;">♥</div>
+            <div class="floating-heart" style="bottom: 15%; left: 12%; animation-delay: 3s;">♥</div>
+            <div class="floating-heart" style="bottom: 25%; right: 15%; animation-delay: 0.8s;">♥</div>
+            <div class="floating-heart" style="top: 50%; left: 3%; animation-delay: 2.2s;">♥</div>
+        </div>
+        <div class="container">
+            <div class="giving-wrapper">
+                <div class="giving-left animate-on-scroll" data-animation="fade-in-left">
+                    <div class="giving-small-card">
+                        <div class="giving-card-icon">
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+                        </div>
+                        <h4 id="giving-left-title">Your Gift Can Change Lives</h4>
+                        <p id="giving-left-text">Every contribution, big or small, makes an eternal impact.</p>
+                        <p class="giving-blessing" id="giving-left-blessing"><em>a blessing.</em> ♥</p>
+                    </div>
+                </div>
+                <div class="giving-center animate-on-scroll" data-animation="fade-in-scale" data-delay="200">
+                    <div class="giving-main-card">
+                        <h3 class="giving-main-title" id="giving-main-title">Give What You Can</h3>
+                        <p class="giving-main-script" id="giving-main-script">Every gift matters! <span class="heart-inline">♥</span></p>
+                        <p class="giving-main-text" id="giving-main-text">We don't ask how much you give. Whatever you can give, God can use to make a powerful difference in someone's life.</p>
+                        <a href="#" class="btn btn-donate btn-donate-cta giving-btn" id="giving-main-btn">
+                            <span class="btn-icon">♥</span>
+                            <span id="giving-main-btn-text">Donate Now</span>
+                        </a>
+                        <p class="giving-thanks" id="giving-main-thanks"><em>Thank you for partnering with us.</em> ♥</p>
+                    </div>
+                </div>
+                <div class="giving-right animate-on-scroll" data-animation="fade-in-right" data-delay="400">
+                    <div class="giving-small-card">
+                        <div class="giving-card-icon">
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </div>
+                        <h4 id="giving-right-title">Your Generosity Builds God's Kingdom</h4>
+                        <p id="giving-right-text">Your generosity helps bring hope, restores lives, and spreads God's love to those in need.</p>
+                        <p class="giving-blessing" id="giving-right-blessing"><em>Thank you.</em> ♥</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section id="gallery" class="gallery section">
+        <div class="container">
+            <div class="section-header animate-on-scroll" data-animation="fade-in-up">
+                <div class="section-label center" id="gallery-label">Our Work in Action</div>
+                <h2 class="section-title center" id="gallery-title">Stories of Hope & Transformation</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="gallery-grid" id="gallery-grid">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- MEDIA & PHOTOS (NEW) -->
+    <section id="media" class="media section">
+        <div class="container">
+            <div class="section-header animate-on-scroll" data-animation="fade-in-up">
+                <div class="section-label center" id="media-label">Media & Photos</div>
+                <h2 class="section-title center" id="media-title">Moments That Matter</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="media-grid" id="media-grid">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- IMPACT BANNER -->
+    <section class="impact-banner">
+        <div class="impact-banner-bg parallax-bg" id="banner-bg" data-speed="0.4"></div>
+        <div class="impact-banner-overlay"></div>
+        <div class="container impact-banner-content">
+            <div class="animate-on-scroll" data-animation="fade-in-up">
+                <p class="impact-banner-text" id="banner-text"></p>
+                <p class="impact-banner-sub" id="banner-sub"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- WAYS TO PARTNER -->
+    <section id="partner" class="partner section">
+        <div class="container">
+            <div class="section-header animate-on-scroll" data-animation="fade-in-up">
+                <div class="section-label center" id="partner-label">Ways to Partner</div>
+                <h2 class="section-title center" id="partner-title">Join Us in Making a Difference</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="partner-grid" id="partner-grid">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="footer" class="footer">
+        <div class="footer-wave">
+            <svg viewBox="0 0 1440 100" preserveAspectRatio="none">
+                <path d="M0,40 C360,100 720,0 1080,60 C1260,80 1380,40 1440,50 L1440,100 L0,100 Z" fill="currentColor"/>
+            </svg>
+        </div>
+        <div class="container footer-content">
+            <div class="footer-main animate-on-scroll" data-animation="fade-in-up">
+                <div class="footer-logo">
+                    <img id="footer-logo-img" src="images/logo.png" alt="Good Samaritans" class="footer-logo-image">
+                    <div>
+                        <h3 class="footer-name" id="footer-org-name">Good Samaritans</h3>
+                        <p class="footer-tagline" id="footer-tagline">Love Your Neighbour</p>
+                    </div>
+                </div>
+                <div class="footer-thank-you">
+                    <h4 class="footer-thank-title" id="footer-thank-title">Thank you!</h4>
+                    <p class="footer-thank-text" id="footer-thank-text"><em>May God bless you abundantly.</em> ♥</p>
+                </div>
+                <div class="footer-links" id="footer-links">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="footer-social" id="footer-social">
+                    <a href="#" class="social-link" id="social-facebook" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                    </a>
+                    <a href="#" class="social-link" id="social-instagram" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    </a>
+                    <a href="#" class="social-link" id="social-youtube" aria-label="YouTube">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.56 12 19.56 12 19.56s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="white"/></svg>
+                    </a>
+                    <a href="#" class="social-link" id="social-whatsapp" aria-label="WhatsApp">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2022 — <span id="current-year"></span> Good Samaritans. All rights reserved.</p>
+                <p class="footer-verse" id="footer-verse"><em>"And let us not grow weary of doing good."</em> — Galatians 6:9</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BACK TO TOP -->
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <!-- ADMIN LINK (floating) -->
+    <a href="admin.html" class="admin-float-btn" id="admin-float-btn" title="Admin Panel">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </a>
+
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+    <script src="cms.js"></script>
+    <script src="script.js"></script>
+    <script src="render.js"></script>
+</body>
+</html>

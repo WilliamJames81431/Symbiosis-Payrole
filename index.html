@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symbiosis HR Payroll — India Compliance Suite</title>
+  <meta name="description" content="Symbiosis HR Payroll Management System — India Labour Law Compliant, Multi-tenant SaaS">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- ============================================================
+       LOGIN SCREEN (shown when not authenticated)
+       ============================================================ -->
+  <div id="login-screen" style="display:none;">
+    <!-- populated by renderLoginPage() -->
+  </div>
+
+  <!-- ============================================================
+       MAIN SHELL (shown when authenticated)
+       ============================================================ -->
+  <div id="app-shell" style="display:none;">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">💼</div>
+        <div class="sidebar-logo-text">
+          <span class="sidebar-logo-title">HR Payroll</span>
+          <span class="sidebar-logo-sub">Management System</span>
+        </div>
+      </div>
+
+      <!-- Nav populated dynamically by JS based on role -->
+      <nav class="sidebar-nav" id="sidebar-nav"></nav>
+
+      <!-- Logout at bottom -->
+      <div class="sidebar-footer">
+        <button class="sidebar-logout-btn" onclick="handleLogout()">
+          <span>↩</span> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT AREA -->
+    <div class="shell-right">
+      <!-- Top Header Bar -->
+      <header class="shell-topbar" id="shell-topbar">
+        <div class="topbar-welcome" id="topbar-welcome">Welcome back!</div>
+        <div class="topbar-right">
+          <!-- Theme Toggle -->
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Theme" onclick="toggleTheme()">
+            <span class="theme-icon" id="theme-icon">🌙</span>
+          </button>
+          <button class="topbar-bell" title="Notifications" onclick="showNotificationToast()">
+            🔔<span class="bell-dot"></span>
+          </button>
+          <div class="topbar-profile-container" onclick="toggleProfileDropdown(event)" id="topbar-profile-trigger">
+            <div class="topbar-user-info" id="topbar-user-info">
+              <div class="topbar-user-name" id="topbar-user-name">User</div>
+              <div class="topbar-user-email" id="topbar-user-email">—</div>
+            </div>
+            <div class="topbar-avatar" id="topbar-avatar">U</div>
+            
+            <!-- Profile Action Dropdown -->
+            <div class="profile-dropdown" id="profile-dropdown" style="display: none;" onclick="event.stopPropagation()">
+              <!-- Populated dynamically by JS -->
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main id="app-body"></main>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       INGESTION WIZARD MODAL
+       ============================================================ -->
+  <div id="wizard-modal" class="wizard-modal-overlay no-print" style="display:none;">
+    <div class="wizard-content-box" id="wizard-modal-content"></div>
+  </div>
+
+  <!-- ============================================================
+       SPOTLIGHT SEARCH (Cmd+K / Ctrl+K)
+       ============================================================ -->
+  <div id="spotlight-overlay" class="spotlight-overlay no-print" style="display:none;" onclick="closeSpotlight()">
+    <div class="spotlight-modal" onclick="event.stopPropagation()">
+      <div class="spotlight-header">
+        <span class="spotlight-icon">🔍</span>
+        <input type="text" id="spotlight-input" placeholder="Search employees, departments, or actions..." autocomplete="off" onkeyup="handleSpotlightInput(event)">
+        <span class="spotlight-shortcut">ESC</span>
+      </div>
+      <div class="spotlight-results-container">
+        <ul id="spotlight-results" class="spotlight-results"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DATABASE CONSOLE PANEL (ERP/HR only)
+       ============================================================ -->
+  <div class="database-console-panel minimized no-print" id="db-explorer-panel" style="display:none;">
+    <div class="console-header-bar">
+      <h3>📄 Database Console (Real-Time Reflection)</h3>
+      <div>
+        <button id="db-toggle-btn" onclick="toggleDatabaseExplorer()">Expand ↑</button>
+      </div>
+    </div>
+    <div class="database-explorer-body" id="db-explorer-content"></div>
+  </div>
+
+  <!-- ============================================================
+       TOAST NOTIFICATION CONTAINER
+       ============================================================ -->
+  <div id="toast-container" class="toast-container no-print"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

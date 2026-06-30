@@ -1,0 +1,6 @@
+EmployeeCode,FullName,Day1,Day2,Day3,Day4,Day5,Day6,Day7,Day8,Day9,Day10,Day11,Day12,Day13,Day14,Day15,Day16,Day17,Day18,Day19,Day20,Day21,Day22,Day23,Day24,Day25,Day26,Day27,Day28,Day29,Day30,Overtime
+EMP101,Aarav Sharma,P,P,P,P,P,WO,WO,P,P,P,P,P,WO,WO,P,P,P,P,P,WO,WO,P,P,P,P,P,WO,WO,P,P,10
+EMP102,Priya Patel,X,X,X,X,P,WO,WO,P,P,P,P,P,WO,WO,P,P,P,P,P,WO,WO,P,P,P,P,P,WO,WO,P,P,0
+EMP103,Rohan D.,P,P,P,P,P,WO,WO,P,P,P,P,P,WO,WO,P,P,P,P,X,X,X,X,X,X,X,X,X,X,X,X,5
+EMP104,Ananya Iyer,P,P,P,P,P,WO,WO,EL,EL,P,P,P,WO,WO,P,P,P,P,P,WO,WO,P,P,P,P,P,A,A,P,P,0
+EMP105,Kabir Malhotra,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,P,WO,WO,P,P,P,2

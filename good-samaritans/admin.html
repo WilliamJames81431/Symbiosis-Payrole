@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Good Samaritans — Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ============ PASSWORD GATE ============ -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-box">
+    <div style="font-size:3rem;margin-bottom:12px;">🛡️</div>
+    <h2>Admin Access</h2>
+    <p>Enter the administrator password to continue.</p>
+    <input type="password" id="pwInput" placeholder="Password" autocomplete="off">
+    <div class="pw-error" id="pwError"></div>
+    <button id="pwBtn">Unlock Dashboard</button>
+  </div>
+</div>
+
+<!-- ============ ADMIN SHELL ============ -->
+<div class="admin-wrap hidden" id="adminWrap">
+
+  <!-- Mobile toggle -->
+  <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+
+  <!-- ---- Sidebar ---- -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span>⛪ Good Samaritans</span>
+    </div>
+    <div class="sidebar-label">Content Sections</div>
+    <ul class="sidebar-nav" id="sidebarNav">
+      <li><a href="#" data-section="site" class="active"><span class="nav-icon">⚙️</span> Site Settings</a></li>
+      <li><a href="#" data-section="hero"><span class="nav-icon">🏠</span> Hero</a></li>
+      <li><a href="#" data-section="about"><span class="nav-icon">📖</span> About</a></li>
+      <li><a href="#" data-section="vision"><span class="nav-icon">🔭</span> Vision</a></li>
+      <li><a href="#" data-section="stats"><span class="nav-icon">📊</span> Stats</a></li>
+      <li><a href="#" data-section="impact"><span class="nav-icon">💥</span> Impact</a></li>
+      <li><a href="#" data-section="giving"><span class="nav-icon">💰</span> Giving</a></li>
+      <li><a href="#" data-section="gallery"><span class="nav-icon">🖼️</span> Gallery</a></li>
+      <li><a href="#" data-section="media"><span class="nav-icon">🎬</span> Media</a></li>
+      <li><a href="#" data-section="impactBanner"><span class="nav-icon">📢</span> Impact Banner</a></li>
+      <li><a href="#" data-section="partner"><span class="nav-icon">🤝</span> Partners</a></li>
+      <li><a href="#" data-section="footer"><span class="nav-icon">📋</span> Footer</a></li>
+      <li><a href="#" data-section="navLinks"><span class="nav-icon">🔗</span> Nav Links</a></li>
+    </ul>
+    <div class="sidebar-footer">Good Samaritans CMS v1.0</div>
+  </aside>
+
+  <!-- ---- Main ---- -->
+  <div class="main-area">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="breadcrumb">Dashboard / <strong id="breadcrumbSection">Site Settings</strong></span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-save" id="btnSave">💾 <span class="label-text">Save Section</span></button>
+        <div class="dropdown">
+          <button class="btn btn-outline" id="actionsToggle">⋯ <span class="label-text">Actions</span></button>
+          <div class="dropdown-menu" id="actionsMenu">
+            <button id="btnExport">📦 Export JSON</button>
+            <label>📥 Import JSON<input type="file" id="fileImport" accept=".json"></label>
+            <button id="btnChangePass">🔑 Change Password</button>
+            <button id="btnReset" class="danger">🗑️ Reset to Defaults</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content" id="contentArea"></div>
+  </div>
+</div>
+
+<!-- ============ PASSWORD CHANGE MODAL ============ -->
+<div class="modal-overlay" id="passModal">
+  <div class="modal">
+    <h3>🔑 Change Admin Password</h3>
+    <div class="form-group">
+      <label>New Password</label>
+      <input type="password" id="newPassInput" placeholder="Enter new password">
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <input type="password" id="confirmPassInput" placeholder="Confirm new password">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="passCancel">Cancel</button>
+      <button class="btn btn-primary" id="passSave">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST CONTAINER ============ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- CMS engine -->
+<script src="cms.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ========== HELPERS ========== */
+  const $ = (s, p) => (p || document).querySelector(s);
+  const $$ = (s, p) => [...(p || document).querySelectorAll(s)];
+
+  function toast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'toast ' + (type || 'success');
+    t.textContent = msg;
+    $('#toastContainer').appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
+  }
+
+  function imgPreviewHTML(val, fieldId) {
+    const src = val || '';
+    return `<div class="img-preview ${src ? '' : 'empty'}" id="prev_${fieldId}">${src ? `<img src="${src}" onerror="this.parentNode.classList.add('empty');this.remove()">` : ''}</div>`;
+  }
+
+  function escAttr(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ========== SECTION LABELS ========== */
+  const sectionLabels = {
+    site: 'Site Settings', hero: 'Hero Section', about: 'About Section',
+    vision: 'Vision Section', stats: 'Stats', impact: 'Impact Section',
+    giving: 'Giving Section', gallery: 'Gallery', media: 'Media',
+    impactBanner: 'Impact Banner', partner: 'Partners', footer: 'Footer',
+    navLinks: 'Navigation Links'
+  };
+
+  /* ========== STATE ========== */
+  let currentSection = 'site';
+
+  /* ========== PASSWORD GATE ========== */
+  $('#pwBtn').addEventListener('click', tryLogin);
+  $('#pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+  function tryLogin() {
+    const pass = $('#pwInput').value;
+    if (CMS.checkPassword(pass)) {
+      $('#pwOverlay').classList.add('hidden');
+      $('#adminWrap').classList.remove('hidden');
+      renderSection(currentSection);
+    } else {
+      $('#pwError').textContent = 'Incorrect password. Try again.';
+      $('#pwInput').value = '';
+      $('#pwInput').focus();
+    }
+  }
+
+  /* ========== SIDEBAR NAV ========== */
+  $('#sidebarNav').addEventListener('click', e => {
+    const a = e.target.closest('a[data-section]');
+    if (!a) return;
+    e.preventDefault();
+    $$('#sidebarNav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    currentSection = a.dataset.section;
+    $('#breadcrumbSection').textContent = sectionLabels[currentSection] || currentSection;
+    renderSection(currentSection);
+    // close mobile sidebar
+    $('#sidebar').classList.remove('open');
+  });
+
+  /* Mobile toggle */
+  $('#sidebarToggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+
+  /* ========== TOP BAR ACTIONS ========== */
+  $('#actionsToggle').addEventListener('click', e => {
+    e.stopPropagation();
+    $('#actionsMenu').classList.toggle('open');
+  });
+  document.addEventListener('click', () => $('#actionsMenu').classList.remove('open'));
+
+  /* Save */
+  $('#btnSave').addEventListener('click', () => saveCurrentSection());
+
+  /* Export */
+  $('#btnExport').addEventListener('click', () => {
+    const json = CMS.exportJSON();
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'good-samaritans-cms-backup.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('JSON exported successfully!', 'success');
+  });
+
+  /* Import */
+  $('#fileImport').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (CMS.importJSON(reader.result)) {
+        toast('Data imported successfully!', 'success');
+        renderSection(currentSection);
+      } else {
+        toast('Import failed — invalid JSON.', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  /* Reset */
+  $('#btnReset').addEventListener('click', () => {
+    if (confirm('Reset ALL content to factory defaults? This cannot be undone.')) {
+      CMS.resetAll();
+      toast('All data reset to defaults.', 'info');
+      renderSection(currentSection);
+    }
+  });
+
+  /* Change Password */
+  $('#btnChangePass').addEventListener('click', () => {
+    $('#passModal').classList.add('open');
+    $('#newPassInput').value = '';
+    $('#confirmPassInput').value = '';
+    $('#newPassInput').focus();
+  });
+  $('#passCancel').addEventListener('click', () => $('#passModal').classList.remove('open'));
+  $('#passSave').addEventListener('click', () => {
+    const np = $('#newPassInput').value, cp = $('#confirmPassInput').value;
+    if (!np) { toast('Password cannot be empty.', 'error'); return; }
+    if (np !== cp) { toast('Passwords do not match.', 'error'); return; }
+    CMS.setPassword(np);
+    $('#passModal').classList.remove('open');
+    toast('Password updated!', 'success');
+  });
+  $('#passModal').addEventListener('click', e => { if (e.target === $('#passModal')) $('#passModal').classList.remove('open'); });
+
+  /* ========== IMAGE PREVIEW LIVE UPDATE ========== */
+  document.addEventListener('input', e => {
+    if (e.target.matches('input[data-preview]')) {
+      const prev = document.getElementById(e.target.dataset.preview);
+      if (!prev) return;
+      const src = e.target.value;
+      if (src) {
+        prev.classList.remove('empty');
+        prev.innerHTML = `<img src="${escAttr(src)}" onerror="this.parentNode.classList.add('empty');this.remove()">`;
+      } else {
+        prev.classList.add('empty');
+        prev.innerHTML = '';
+      }
+    }
+  });
+
+  /* ========== RENDER SECTION ========== */
+  function renderSection(section) {
+    const data = CMS.get(section);
+    const area = $('#contentArea');
+    let html = `<div class="section-header"><h1>${sectionLabels[section] || section}</h1><p>Edit the ${sectionLabels[section] || section} content below.</p></div>`;
+
+    switch (section) {
+      case 'site':      html += renderSite(data); break;
+      case 'hero':       html += renderHero(data); break;
+      case 'about':      html += renderAbout(data); break;
+      case 'vision':     html += renderVision(data); break;
+      case 'stats':      html += renderStats(data); break;
+      case 'impact':     html += renderImpact(data); break;
+      case 'giving':     html += renderGiving(data); break;
+      case 'gallery':    html += renderGallery(data); break;
+      case 'media':      html += renderMedia(data); break;
+      case 'impactBanner': html += renderImpactBanner(data); break;
+      case 'partner':    html += renderPartner(data); break;
+      case 'footer':     html += renderFooter(data); break;
+      case 'navLinks':   html += renderNavLinks(data); break;
+    }
+
+    area.innerHTML = html;
+    bindArrayEvents();
+  }
+
+  /* --- SITE --- */
+  function renderSite(d) {
+    return `
+      ${field('Logo URL', 'url', 'site_logo', d.logo, true)}
+      ${field('Organization Name', 'text', 'site_orgName', d.orgName)}
+      ${field('Tagline', 'text', 'site_tagline', d.tagline)}
+      ${field('Admin Password', 'password', 'site_adminPassword', d.adminPassword)}
+    `;
+  }
+
+  /* --- HERO --- */
+  function renderHero(d) {
+    return `
+      ${field('Background Image', 'url', 'hero_bgImage', d.bgImage, true)}
+      <div class="form-row">
+        ${field('Badge Stars', 'text', 'hero_badgeStars', d.badgeStars)}
+        ${field('Badge Year', 'text', 'hero_badgeYear', d.badgeYear)}
+      </div>
+      <div class="form-row-3">
+        ${field('Title Line 1', 'text', 'hero_titleLine1', d.titleLine1)}
+        ${field('Title Line 2', 'text', 'hero_titleLine2', d.titleLine2)}
+        ${field('Title Line 3', 'text', 'hero_titleLine3', d.titleLine3)}
+      </div>
+      ${field('Subtitle', 'text', 'hero_subtitle', d.subtitle)}
+      ${textareaField('Typing Phrases', 'hero_typingPhrases', (d.typingPhrases || []).join('\n'), 'One phrase per line')}
+      <hr class="form-divider">
+      <div class="form-row">
+        ${field('Donate Link', 'url', 'hero_donateLink', d.donateLink)}
+        ${field('Donate Button Text', 'text', 'hero_donateText', d.donateText)}
+      </div>
+      <div class="form-row">
+        ${field('Learn More Link', 'url', 'hero_learnMoreLink', d.learnMoreLink)}
+        ${field('Learn More Text', 'text', 'hero_learnMoreText', d.learnMoreText)}
+      </div>
+    `;
+  }
+
+  /* --- ABOUT --- */
+  function renderAbout(d) {
+    return `
+      ${field('Label', 'text', 'about_label', d.label)}
+      ${field('Title', 'text', 'about_title', d.title)}
+      ${textareaField('Description', 'about_description', d.description)}
+      ${textareaField('Highlight Text', 'about_highlightText', d.highlightText, 'HTML supported')}
+      ${field('Scripture Text', 'text', 'about_scriptureText', d.scriptureText)}
+      ${field('Scripture Reference', 'text', 'about_scriptureRef', d.scriptureRef)}
+      ${field('Image URL', 'url', 'about_image', d.image, true)}
+      ${field('Image Alt Text', 'text', 'about_imageAlt', d.imageAlt)}
+    `;
+  }
+
+  /* --- VISION --- */
+  function renderVision(d) {
+    return `
+      ${field('Background Image', 'url', 'vision_bgImage', d.bgImage, true)}
+      ${field('Label', 'text', 'vision_label', d.label)}
+      ${field('Title', 'text', 'vision_title', d.title)}
+      ${textareaField('Text', 'vision_text', d.text, 'HTML supported')}
+      ${field('Verse', 'text', 'vision_verse', d.verse)}
+    `;
+  }
+
+  /* --- STATS (array) --- */
+  function renderStats(d) {
+    const items = Array.isArray(d) ? d : [];
+    let html = `<div class="array-section">
+      <div class="array-header"><h3>Stats Items (${items.length})</h3><button class="btn btn-primary btn-sm" data-add="stats">+ Add Stat</button></div>
+      <div class="array-list" id="arrayList_stats">`;
+    if (!items.length) {
+      html += `<div class="empty-state"><div class="empty-icon">📊</div><p>No stats yet. Click "Add Stat" to begin.</p></div>`;
+    }
+    items.forEach((it, i) => {
+      html += `<div class="array-card" data-index="${i}">
+        <div class="array-card-head"><span class="card-index">Stat #${i + 1}</span><button class="btn-remove" data-remove="stats" data-index="${i}">✕ Remove</button></div>
+        <div class="form-row">
+          ${field('Number', 'number', `stats_${i}_number`, it.number)}
+          ${field('Label', 'text', `stats_${i}_label`, it.label)}
+        </div>
+        ${selectField('Icon', `stats_${i}_icon`, it.icon, ['users','shield','heart','globe'])}
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }
+
+  /* --- IMPACT --- */
+  function renderImpact(d) {
+    let html = `
+      ${field('Label', 'text', 'impact_label', d.label)}
+      ${field('Title', 'text', 'impact_title', d.title)}
+      <hr class="form-divider">
+    `;
+    const cards = d.cards || [];
+    html += `<div class="array-section">
+      <div class="array-header"><h3>Impact Cards (${cards.length})</h3><button class="btn btn-primary btn-sm" data-add="impact_cards">+ Add Card</button></div>
+      <div class="array-list" id="arrayList_impact_cards">`;
+    if (!cards.length) {
+      html += `<div class="empty-state"><div class="empty-icon">💥</div><p>No impact cards yet.</p></div>`;
+    }
+    cards.forEach((c, i) => {
+      html += `<div class="array-card" data-index="${i}">
+        <div class="array-card-head"><span class="card-index">Card #${i + 1}</span><button class="btn-remove" data-remove="impact_cards" data-index="${i}">✕ Remove</button></div>
+        ${field('Image URL', 'url', `impact_cards_${i}_image`, c.image, true)}
+        ${field('Title', 'text', `impact_cards_${i}_title`, c.title)}
+        ${textareaField('Text', `impact_cards_${i}_text`, c.text)}
+        ${colorField('Accent Color', `impact_cards_${i}_color`, c.color)}
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }
+
+  /* --- GIVING --- */
+  function renderGiving(d) {
+    return `
+      <h3 style="margin-bottom:16px;color:var(--dark);">Left Column</h3>
+      ${field('Title', 'text', 'giving_leftTitle', d.leftTitle)}
+      ${textareaField('Text', 'giving_leftText', d.leftText)}
+      ${field('Blessing', 'text', 'giving_leftBlessing', d.leftBlessing)}
+      <hr class="form-divider">
+      <h3 style="margin-bottom:16px;color:var(--dark);">Center / Main</h3>
+      ${field('Main Title', 'text', 'giving_mainTitle', d.mainTitle)}
+      ${field('Main Scripture', 'text', 'giving_mainScript', d.mainScript)}
+      ${textareaField('Main Text', 'giving_mainText', d.mainText)}
+      ${field('Button Text', 'text', 'giving_mainBtnText', d.mainBtnText)}
+      ${field('Button Link', 'url', 'giving_mainBtnLink', d.mainBtnLink)}
+      ${field('Thanks Message', 'text', 'giving_mainThanks', d.mainThanks)}
+      <hr class="form-divider">
+      <h3 style="margin-bottom:16px;color:var(--dark);">Right Column</h3>
+      ${field('Title', 'text', 'giving_rightTitle', d.rightTitle)}
+      ${textareaField('Text', 'giving_rightText', d.rightText)}
+      ${field('Blessing', 'text', 'giving_rightBlessing', d.rightBlessing)}
+    `;
+  }
+
+  /* --- GALLERY --- */
+  function renderGallery(d) {
+    let html = `
+      ${field('Label', 'text', 'gallery_label', d.label)}
+      ${field('Title', 'text', 'gallery_title', d.title)}
+      <hr class="form-divider">
+    `;
+    const items = d.items || [];
+    html += `<div class="array-section">
+      <div class="array-header"><h3>Gallery Items (${items.length})</h3><button class="btn btn-primary btn-sm" data-add="gallery_items">+ Add Image</button></div>
+      <div class="array-list" id="arrayList_gallery_items">`;
+    if (!items.length) {
+      html += `<div class="empty-state"><div class="empty-icon">🖼️</div><p>No gallery items yet.</p></div>`;
+    }
+    items.forEach((it, i) => {
+      html += `<div class="array-card" data-index="${i}">
+        <div class="array-card-head"><span class="card-index">Image #${i + 1}</span><button class="btn-remove" data-remove="gallery_items" data-index="${i}">✕ Remove</button></div>
+        ${field('Image URL', 'url', `gallery_items_${i}_image`, it.image, true)}
+        ${field('Caption', 'text', `gallery_items_${i}_caption`, it.caption)}
+        ${checkboxField('Wide (span 2 columns)', `gallery_items_${i}_wide`, it.wide)}
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }
+
+  /* --- MEDIA --- */
+  function renderMedia(d) {
+    let html = `
+      ${field('Label', 'text', 'media_label', d.label)}
+      ${field('Title', 'text', 'media_title', d.title)}
+      <hr class="form-divider">
+    `;
+    const items = d.items || [];
+    html += `<div class="array-section">
+      <div class="array-header"><h3>Media Items (${items.length})</h3><button class="btn btn-primary btn-sm" data-add="media_items">+ Add Media</button></div>
+      <div class="array-list" id="arrayList_media_items">`;
+    if (!items.length) {
+      html += `<div class="empty-state"><div class="empty-icon">🎬</div><p>No media items yet.</p></div>`;
+    }
+    items.forEach((it, i) => {
+      html += `<div class="array-card" data-index="${i}">
+        <div class="array-card-head"><span class="card-index">Media #${i + 1}</span><button class="btn-remove" data-remove="media_items" data-index="${i}">✕ Remove</button></div>
+        ${selectField('Type', `media_items_${i}_type`, it.type, ['image','video'])}
+        ${field('Title', 'text', `media_items_${i}_title`, it.title)}
+        ${textareaField('Description', `media_items_${i}_description`, it.description)}
+        <div class="drive-converter">
+          ${field('URL / Google Drive Link', 'url', `media_items_${i}_url`, it.url, false)}
+          <button class="btn btn-accent btn-sm" data-convert="${i}" data-type-field="media_items_${i}_type" data-url-field="media_items_${i}_url">🔗 Convert Drive Link</button>
+        </div>
+        <div id="media_preview_${i}">
+          ${mediaPreviewHTML(it)}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }
+
+  function mediaPreviewHTML(it) {
+    if (!it || !it.url) return '';
+    if (it.type === 'video') {
+      return `<div class="video-preview"><iframe src="${escAttr(it.url)}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`;
+    }
+    return `<div class="img-preview"><img src="${escAttr(it.url)}" onerror="this.parentNode.classList.add('empty');this.remove()"></div>`;
+  }
+
+  /* --- IMPACT BANNER --- */
+  function renderImpactBanner(d) {
+    return `
+      ${field('Background Image', 'url', 'impactBanner_bgImage', d.bgImage, true)}
+      ${textareaField('Text', 'impactBanner_text', d.text, 'HTML supported — use <b> for bold')}
+      ${field('Sub Text', 'text', 'impactBanner_subText', d.subText)}
+    `;
+  }
+
+  /* --- PARTNER --- */
+  function renderPartner(d) {
+    let html = `
+      ${field('Label', 'text', 'partner_label', d.label)}
+      ${field('Title', 'text', 'partner_title', d.title)}
+      <hr class="form-divider">
+    `;
+    const cards = d.cards || [];
+    html += `<div class="array-section">
+      <div class="array-header"><h3>Partner Cards (${cards.length})</h3><button class="btn btn-primary btn-sm" data-add="partner_cards">+ Add Card</button></div>
+      <div class="array-list" id="arrayList_partner_cards">`;
+    if (!cards.length) {
+      html += `<div class="empty-state"><div class="empty-icon">🤝</div><p>No partner cards yet.</p></div>`;
+    }
+    cards.forEach((c, i) => {
+      html += `<div class="array-card" data-index="${i}">
+        <div class="array-card-head"><span class="card-index">Partner #${i + 1}</span><button class="btn-remove" data-remove="partner_cards" data-index="${i}">✕ Remove</button></div>
+        ${field('Title', 'text', `partner_cards_${i}_title`, c.title)}
+        ${textareaField('Text', `partner_cards_${i}_text`, c.text)}
+        ${field('Emoji', 'text', `partner_cards_${i}_emoji`, c.emoji)}
+        ${checkboxField('Featured', `partner_cards_${i}_featured`, c.featured)}
+        ${field('Button Text', 'text', `partner_cards_${i}_btnText`, c.btnText)}
+        ${field('Button Link', 'url', `partner_cards_${i}_btnLink`, c.btnLink)}
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }
+
+  /* --- FOOTER --- */
+  function renderFooter(d) {
+    const sl = d.socialLinks || {};
+    return `
+      ${field('Thank You Title', 'text', 'footer_thankTitle', d.thankTitle)}
+      ${textareaField('Thank You Text', 'footer_thankText', d.thankText)}
+      ${field('Verse', 'text', 'footer_verse', d.verse)}
+      <hr class="form-divider">
+      <h3 style="margin-bottom:16px;color:var(--dark);">Social Links</h3>
+      ${field('Facebook', 'url', 'footer_socialLinks_facebook', sl.facebook)}
+      ${field('Instagram', 'url', 'footer_socialLinks_instagram', sl.instagram)}
+      ${field('YouTube', 'url', 'footer_socialLinks_youtube', sl.youtube)}
+      ${field('WhatsApp', 'url', 'footer_socialLinks_whatsapp', sl.whatsapp)}
+    `;
+  }
+
+  /* --- NAV LINKS (array) --- */
+  function renderNavLinks(d) {
+    const items = Array.isArray(d) ? d : [];
+    let html = `<div class="array-section">
+      <div class="array-header"><h3>Navigation Links (${items.length})</h3><button class="btn btn-primary btn-sm" data-add="navLinks">+ Add Link</button></div>
+      <div class="array-list" id="arrayList_navLinks">`;
+    if (!items.length) {
+      html += `<div class="empty-state"><div class="empty-icon">🔗</div><p>No nav links yet.</p></div>`;
+    }
+    items.forEach((it, i) => {
+      html += `<div class="array-card" data-index="${i}">
+        <div class="array-card-head"><span class="card-index">Link #${i + 1}</span><button class="btn-remove" data-remove="navLinks" data-index="${i}">✕ Remove</button></div>
+        <div class="form-row">
+          ${field('Label', 'text', `navLinks_${i}_label`, it.label)}
+          ${field('Href', 'text', `navLinks_${i}_href`, it.href)}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }
+
+  /* ========== FIELD BUILDERS ========== */
+  function field(label, type, id, val, hasPreview) {
+    const v = escAttr(val);
+    const prevId = 'prev_' + id;
+    let h = `<div class="form-group"><label for="${id}">${label}</label>`;
+    h += `<input type="${type}" id="${id}" value="${v}"`;
+    if (hasPreview) h += ` data-preview="${prevId}"`;
+    h += `>`;
+    if (hasPreview) h += imgPreviewHTML(val, id);
+    h += `</div>`;
+    return h;
+  }
+
+  function textareaField(label, id, val, hint) {
+    const v = val != null ? String(val).replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+    const hintSpan = hint ? ` <span class="hint">(${hint})</span>` : '';
+    return `<div class="form-group"><label for="${id}">${label}${hintSpan}</label><textarea id="${id}">${v}</textarea></div>`;
+  }
+
+  function selectField(label, id, val, options) {
+    let h = `<div class="form-group"><label for="${id}">${label}</label><select id="${id}">`;
+    options.forEach(o => {
+      h += `<option value="${o}"${val === o ? ' selected' : ''}>${o}</option>`;
+    });
+    h += `</select></div>`;
+    return h;
+  }
+
+  function colorField(label, id, val) {
+    const v = val || '#0d6eaa';
+    return `<div class="form-group"><label for="${id}">${label}</label><input type="color" id="${id}" value="${escAttr(v)}"></div>`;
+  }
+
+  function checkboxField(label, id, val) {
+    return `<div class="form-check"><input type="checkbox" id="${id}"${val ? ' checked' : ''}><label for="${id}">${label}</label></div>`;
+  }
+
+  /* ========== ARRAY ADD / REMOVE ========== */
+  function bindArrayEvents() {
+    /* Add */
+    $$('[data-add]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addArrayItem(btn.dataset.add);
+      });
+    });
+    /* Remove */
+    $$('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        removeArrayItem(btn.dataset.remove, parseInt(btn.dataset.index));
+      });
+    });
+    /* Drive convert */
+    $$('[data-convert]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = btn.dataset.convert;
+        const typeEl = document.getElementById(btn.dataset.typeField);
+        const urlEl = document.getElementById(btn.dataset.urlField);
+        if (!urlEl || !urlEl.value) { toast('Paste a Google Drive link first.', 'error'); return; }
+        const converted = CMS.driveUrl(urlEl.value, typeEl ? typeEl.value : 'image');
+        if (converted) {
+          urlEl.value = converted;
+          const prevDiv = document.getElementById('media_preview_' + idx);
+          const type = typeEl ? typeEl.value : 'image';
+          if (type === 'video') {
+            prevDiv.innerHTML = `<div class="video-preview"><iframe src="${escAttr(converted)}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`;
+          } else {
+            prevDiv.innerHTML = `<div class="img-preview"><img src="${escAttr(converted)}" onerror="this.parentNode.classList.add('empty');this.remove()"></div>`;
+          }
+          toast('Drive link converted!', 'success');
+        } else {
+          toast('Could not convert link. Check URL format.', 'error');
+        }
+      });
+    });
+  }
+
+  function addArrayItem(key) {
+    // Save current form first, then add blank, re-render
+    const sData = collectCurrentSection();
+    if (key === 'stats') {
+      if (!Array.isArray(sData)) { /* first run fallback */ }
+      const arr = Array.isArray(sData) ? sData : [];
+      arr.push({ number: 0, label: '', icon: 'users' });
+      CMS.set('stats', arr);
+    } else if (key === 'navLinks') {
+      const arr = Array.isArray(sData) ? sData : [];
+      arr.push({ label: '', href: '' });
+      CMS.set('navLinks', arr);
+    } else if (key === 'impact_cards') {
+      sData.cards = sData.cards || [];
+      sData.cards.push({ image: '', title: '', text: '', color: '#0d6eaa' });
+      CMS.set('impact', sData);
+    } else if (key === 'gallery_items') {
+      sData.items = sData.items || [];
+      sData.items.push({ image: '', caption: '', wide: false });
+      CMS.set('gallery', sData);
+    } else if (key === 'media_items') {
+      sData.items = sData.items || [];
+      sData.items.push({ type: 'image', url: '', title: '', description: '' });
+      CMS.set('media', sData);
+    } else if (key === 'partner_cards') {
+      sData.cards = sData.cards || [];
+      sData.cards.push({ title: '', text: '', emoji: '🤝', featured: false, btnText: '', btnLink: '' });
+      CMS.set('partner', sData);
+    }
+    renderSection(currentSection);
+    toast('Item added.', 'success');
+  }
+
+  function removeArrayItem(key, idx) {
+    const sData = collectCurrentSection();
+    if (key === 'stats') {
+      const arr = Array.isArray(sData) ? sData : [];
+      arr.splice(idx, 1);
+      CMS.set('stats', arr);
+    } else if (key === 'navLinks') {
+      const arr = Array.isArray(sData) ? sData : [];
+      arr.splice(idx, 1);
+      CMS.set('navLinks', arr);
+    } else if (key === 'impact_cards') {
+      (sData.cards || []).splice(idx, 1);
+      CMS.set('impact', sData);
+    } else if (key === 'gallery_items') {
+      (sData.items || []).splice(idx, 1);
+      CMS.set('gallery', sData);
+    } else if (key === 'media_items') {
+      (sData.items || []).splice(idx, 1);
+      CMS.set('media', sData);
+    } else if (key === 'partner_cards') {
+      (sData.cards || []).splice(idx, 1);
+      CMS.set('partner', sData);
+    }
+    renderSection(currentSection);
+    toast('Item removed.', 'info');
+  }
+
+  /* ========== SAVE / COLLECT ========== */
+  function saveCurrentSection() {
+    try {
+      const data = collectCurrentSection();
+      CMS.set(currentSection, data);
+      toast(`${sectionLabels[currentSection]} saved!`, 'success');
+    } catch (err) {
+      toast('Save failed: ' + err.message, 'error');
+    }
+  }
+
+  function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+  function checked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
+  function numVal(id) { const el = document.getElementById(id); return el ? parseInt(el.value) || 0 : 0; }
+
+  function collectCurrentSection() {
+    switch (currentSection) {
+      case 'site': return {
+        logo: val('site_logo'),
+        orgName: val('site_orgName'),
+        tagline: val('site_tagline'),
+        adminPassword: val('site_adminPassword')
+      };
+
+      case 'hero': return {
+        bgImage: val('hero_bgImage'),
+        badgeStars: val('hero_badgeStars'),
+        badgeYear: val('hero_badgeYear'),
+        titleLine1: val('hero_titleLine1'),
+        titleLine2: val('hero_titleLine2'),
+        titleLine3: val('hero_titleLine3'),
+        subtitle: val('hero_subtitle'),
+        typingPhrases: val('hero_typingPhrases').split('\n').map(s => s.trim()).filter(Boolean),
+        donateLink: val('hero_donateLink'),
+        donateText: val('hero_donateText'),
+        learnMoreLink: val('hero_learnMoreLink'),
+        learnMoreText: val('hero_learnMoreText')
+      };
+
+      case 'about': return {
+        label: val('about_label'),
+        title: val('about_title'),
+        description: val('about_description'),
+        highlightText: val('about_highlightText'),
+        scriptureText: val('about_scriptureText'),
+        scriptureRef: val('about_scriptureRef'),
+        image: val('about_image'),
+        imageAlt: val('about_imageAlt')
+      };
+
+      case 'vision': return {
+        bgImage: val('vision_bgImage'),
+        label: val('vision_label'),
+        title: val('vision_title'),
+        text: val('vision_text'),
+        verse: val('vision_verse')
+      };
+
+      case 'stats': {
+        const cards = $$('#arrayList_stats .array-card');
+        return cards.map((_, i) => ({
+          number: numVal(`stats_${i}_number`),
+          label: val(`stats_${i}_label`),
+          icon: val(`stats_${i}_icon`)
+        }));
+      }
+
+      case 'impact': {
+        const cards = $$('#arrayList_impact_cards .array-card');
+        return {
+          label: val('impact_label'),
+          title: val('impact_title'),
+          cards: cards.map((_, i) => ({
+            image: val(`impact_cards_${i}_image`),
+            title: val(`impact_cards_${i}_title`),
+            text: val(`impact_cards_${i}_text`),
+            color: val(`impact_cards_${i}_color`)
+          }))
+        };
+      }
+
+      case 'giving': return {
+        leftTitle: val('giving_leftTitle'),
+        leftText: val('giving_leftText'),
+        leftBlessing: val('giving_leftBlessing'),
+        mainTitle: val('giving_mainTitle'),
+        mainScript: val('giving_mainScript'),
+        mainText: val('giving_mainText'),
+        mainBtnText: val('giving_mainBtnText'),
+        mainBtnLink: val('giving_mainBtnLink'),
+        mainThanks: val('giving_mainThanks'),
+        rightTitle: val('giving_rightTitle'),
+        rightText: val('giving_rightText'),
+        rightBlessing: val('giving_rightBlessing')
+      };
+
+      case 'gallery': {
+        const cards = $$('#arrayList_gallery_items .array-card');
+        return {
+          label: val('gallery_label'),
+          title: val('gallery_title'),
+          items: cards.map((_, i) => ({
+            image: val(`gallery_items_${i}_image`),
+            caption: val(`gallery_items_${i}_caption`),
+            wide: checked(`gallery_items_${i}_wide`)
+          }))
+        };
+      }
+
+      case 'media': {
+        const cards = $$('#arrayList_media_items .array-card');
+        return {
+          label: val('media_label'),
+          title: val('media_title'),
+          items: cards.map((_, i) => ({
+            type: val(`media_items_${i}_type`),
+            url: val(`media_items_${i}_url`),
+            title: val(`media_items_${i}_title`),
+            description: val(`media_items_${i}_description`)
+          }))
+        };
+      }
+
+      case 'impactBanner': return {
+        bgImage: val('impactBanner_bgImage'),
+        text: val('impactBanner_text'),
+        subText: val('impactBanner_subText')
+      };
+
+      case 'partner': {
+        const cards = $$('#arrayList_partner_cards .array-card');
+        return {
+          label: val('partner_label'),
+          title: val('partner_title'),
+          cards: cards.map((_, i) => ({
+            title: val(`partner_cards_${i}_title`),
+            text: val(`partner_cards_${i}_text`),
+            emoji: val(`partner_cards_${i}_emoji`),
+            featured: checked(`partner_cards_${i}_featured`),
+            btnText: val(`partner_cards_${i}_btnText`),
+            btnLink: val(`partner_cards_${i}_btnLink`)
+          }))
+        };
+      }
+
+      case 'footer': return {
+        thankTitle: val('footer_thankTitle'),
+        thankText: val('footer_thankText'),
+        verse: val('footer_verse'),
+        socialLinks: {
+          facebook: val('footer_socialLinks_facebook'),
+          instagram: val('footer_socialLinks_instagram'),
+          youtube: val('footer_socialLinks_youtube'),
+          whatsapp: val('footer_socialLinks_whatsapp')
+        }
+      };
+
+      case 'navLinks': {
+        const cards = $$('#arrayList_navLinks .array-card');
+        return cards.map((_, i) => ({
+          label: val(`navLinks_${i}_label`),
+          href: val(`navLinks_${i}_href`)
+        }));
+      }
+
+      default: return {};
+    }
+  }
+
+  /* ========== KEYBOARD SHORTCUT ========== */
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      if (!$('#adminWrap').classList.contains('hidden')) saveCurrentSection();
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
