@@ -2109,9 +2109,6 @@ function initLoginBackgroundCanvas() {
     if (!document.getElementById('login-canvas-bg')) return;
     ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--body-bg') || '#0f172a';
-    ctx.fillRect(0, 0, width, height);
-
     blobs.forEach(b => {
       b.x += b.vx;
       b.y += b.vy;
@@ -2150,8 +2147,38 @@ function initSymbioMascot() {
   const pupils = document.getElementById('pupils');
   const bubble = document.getElementById('pet-bubble');
   const status = document.getElementById('pet-status');
+  const petCard = document.querySelector('.pet-card');
   
   if (!container || !pupils) return;
+
+  // Floating physics for the pet
+  if (petCard) {
+    let petX = window.innerWidth * 0.8;
+    let petY = window.innerHeight * 0.5;
+    let petVx = (Math.random() - 0.5) * 1.5;
+    let petVy = (Math.random() - 0.5) * 1.5;
+
+    function animatePet() {
+      if (!document.querySelector('.pet-card')) return;
+      
+      petX += petVx;
+      petY += petVy;
+
+      const marginX = 150;
+      const marginY = 200;
+      
+      if (petX < marginX) { petX = marginX; petVx *= -1; }
+      if (petX > window.innerWidth - marginX) { petX = window.innerWidth - marginX; petVx *= -1; }
+      if (petY < marginY) { petY = marginY; petVy *= -1; }
+      if (petY > window.innerHeight - marginY) { petY = window.innerHeight - marginY; petVy *= -1; }
+
+      petCard.style.left = petX + 'px';
+      petCard.style.top = petY + 'px';
+
+      requestAnimationFrame(animatePet);
+    }
+    requestAnimationFrame(animatePet);
+  }
 
   const idleMessages = [
     "EPF basic wage cap is ₹15,000.",

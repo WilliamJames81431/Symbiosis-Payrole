@@ -1403,10 +1403,7 @@ select.form-control option {
   display: flex; /* Force flex display when visible */
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 10% 20%, rgba(0, 113, 227, 0.08) 0%, transparent 40%),
-              radial-gradient(circle at 90% 80%, rgba(160, 160, 170, 0.12) 0%, transparent 40%),
-              radial-gradient(circle at 50% 50%, rgba(0, 113, 227, 0.03) 0%, transparent 50%),
-              var(--body-bg);
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
   overflow-y: auto;
   padding: 40px 20px;
   box-sizing: border-box;
@@ -2710,37 +2707,28 @@ select.form-control option {
 
 @media (min-width: 900px) {
   .login-wrapper {
-    max-width: 860px;
-    display: grid;
-    grid-template-columns: 460px 360px;
-    gap: 40px;
-    align-items: center;
+    max-width: 460px; /* Centered login card only */
+    width: 100%;
+    margin: 0 auto;
   }
 }
 
-/* Pet Glassmorphic Card */
+/* Floating Pet Container */
 .pet-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--card-shadow), 0 0 40px rgba(99, 102, 241, 0.04);
-  padding: 32px;
+  position: fixed;
+  top: 50%;
+  left: 80%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
-  transition: var(--transition);
-  min-height: 380px;
-  justify-content: space-between;
-  box-sizing: border-box;
+  width: 240px;
+  /* Removed card background/borders to let it float freely as a character */
 }
 
 .pet-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary-glow);
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.08);
+  /* removed the border/shadow hover since it has no card background now */
 }
 
 /* Speech Bubble */
