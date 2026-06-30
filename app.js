@@ -96,7 +96,10 @@ import {
   deleteGoogleAccountFromEditor,
   editorInsertLink,
   editorInsertImage,
-  editorInsertTable
+  editorInsertTable,
+  switchEditorSubTab,
+  applyThemePreset,
+  saveCustomCssFromEditor
 } from './website-editor.js';
 
 // ----------------------------------------------------
@@ -4596,7 +4599,11 @@ function importDatabaseBackup(event) {
       addAuditLog("DATABASE_RESTORE", "Local database tables restored from external backup file.");
 
       alert("Database restored successfully from backup! Reloading dashboard...");
-      renderHRTab();
+      if (state.currentRole === 'ERP') {
+        renderERPTab();
+      } else {
+        renderHRTab();
+      }
     } catch (err) {
       alert("Failed to parse backup JSON file: " + err.message);
     }
@@ -6149,6 +6156,9 @@ window.editorInsertTable = editorInsertTable;
 window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
 window.showToast = showNotificationToast; // Alias for editor module
 window.switchBackToERP = switchBackToERP;
+window.switchEditorSubTab = switchEditorSubTab;
+window.applyThemePreset = applyThemePreset;
+window.saveCustomCssFromEditor = saveCustomCssFromEditor;
 
 // Google Identity Services initialization
 function initGoogleSignIn() {

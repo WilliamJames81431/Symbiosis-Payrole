@@ -6,6 +6,29 @@
 
 import { db, TokenStore } from './api-client.js';
 
+// Local modular toast helper that calls the main application toast
+function showToast(title, msg, type) {
+  if (typeof window.showNotificationToast === 'function') {
+    window.showNotificationToast(title, msg, type);
+  } else if (typeof window.showToast === 'function') {
+    window.showToast(title, msg, type);
+  } else {
+    console.log(`[Toast ${type}] ${title}: ${msg}`);
+  }
+}
+
+// Applies custom CSS overrides injected by the Super Admin
+function applyCustomCSS() {
+  let styleEl = document.getElementById('custom-css-style');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'custom-css-style';
+    document.head.appendChild(styleEl);
+  }
+  const css = localStorage.getItem('symbiosis_custom_css') || '';
+  styleEl.textContent = css;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // 1. STORAGE KEYS & DEFAULTS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -159,6 +182,7 @@ function applyBranding() {
     document.documentElement.style.setProperty('--primary-glow', `${b.primaryColor}22`);
     document.documentElement.style.setProperty('--primary-light', `${b.primaryColor}08`);
   }
+  applyCustomCSS();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -243,8 +267,18 @@ function renderCustomPage(pageId) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 7. MAIN EDITOR RENDERER (ERP Super Admin only)
-// ═══════════════════════════════════════════════════════════════════════════
+function switchEditorSubTab(id) {
+  window._editorSubTab = id;
+  const container = document.getElementById('app-body');
+  if (container) {
+    container.innerHTML = renderWebsiteEditor();
+    if (id === 'advanced') {
+      const ta = document.getElementById('ed-custom-css');
+      if (ta) ta.value = localStorage.getItem('symbiosis_custom_css') || '';
+    }
+  }
+}
+window.switchEditorSubTab = switchEditorSubTab;
 
 function renderWebsiteEditor() {
   const b = getBranding();
@@ -257,7 +291,7 @@ function renderWebsiteEditor() {
   const editorSubTab = window._editorSubTab || 'branding';
 
   const subTabBtn = (id, label, icon) => `
-    <button class="editor-subtab-btn ${editorSubTab === id ? 'active' : ''}" onclick="window._editorSubTab='${id}'; renderWebsiteEditor();">
+    <button class="editor-subtab-btn ${editorSubTab === id ? 'active' : ''}" onclick="switchEditorSubTab('${id}')">
       <span>${icon}</span> ${label}
     </button>
   `;
@@ -288,6 +322,17 @@ function renderWebsiteEditor() {
             <div style="display:flex; gap:10px; align-items:center;">
               <input type="color" id="ed-primary-color" value="${b.primaryColor}" style="width:50px; height:40px; border:none; cursor:pointer; border-radius:8px;">
               <code id="ed-color-hex" style="font-size:0.82rem;">${b.primaryColor}</code>
+            </div>
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Select Accent Theme Preset</label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('#0071e3', '💼')" style="padding:4px 10px; font-size:0.75rem; border-radius:6px; display:flex; align-items:center; gap:4px;">🔵 Cupertino Blue</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('#34c759', '🍃')" style="padding:4px 10px; font-size:0.75rem; border-radius:6px; display:flex; align-items:center; gap:4px;">🟢 Emerald Mint</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('#af52de', '🍇')" style="padding:4px 10px; font-size:0.75rem; border-radius:6px; display:flex; align-items:center; gap:4px;">🟣 Royal Grape</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('#ff9500', '☀️')" style="padding:4px 10px; font-size:0.75rem; border-radius:6px; display:flex; align-items:center; gap:4px;">🟠 Sunset Amber</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('#ff3b30', '🔥')" style="padding:4px 10px; font-size:0.75rem; border-radius:6px; display:flex; align-items:center; gap:4px;">🔴 Crimson Fire</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('#1c1c1e', '🕶️')" style="padding:4px 10px; font-size:0.75rem; border-radius:6px; display:flex; align-items:center; gap:4px;">⚫ Midnight Stealth</button>
             </div>
           </div>
           <div class="form-group" style="grid-column: span 2;">
@@ -606,13 +651,45 @@ function renderWebsiteEditor() {
       </div>
     `;
   }
+  // ── ADVANCED CSS TAB ──────────────────────────────────────────────────
+  else if (editorSubTab === 'advanced') {
+    subContent = `
+      <div class="editor-section animate-fade-in">
+        <h3 class="editor-section-title">🎨 Advanced Custom CSS Injector</h3>
+        <p class="editor-section-desc">Inject custom CSS rules directly into the page head. Changes are stored in localStorage and applied globally.</p>
+        <div class="form-group">
+          <label class="form-label">Custom CSS Code Overrides</label>
+          <textarea class="form-control" id="ed-custom-css" rows="12" style="font-family:Consolas, Monaco, monospace; font-size:0.83rem; background:#18181b; color:#f4f4f5; border:1px solid var(--card-border); border-radius:8px; padding:12px; width:100%; box-sizing:border-box; line-height:1.5;" placeholder="/* Example: change the topbar background color */\n.top-bar {\n  background: #111827 !important;\n}\n\n/* Example: hide the sidebar logo */\n.sidebar-logo {\n  display: none !important;\n}"></textarea>
+        </div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" onclick="saveCustomCssFromEditor()">💾 Save & Apply CSS</button>
+        </div>
+      </div>
+    `;
+  }
+  // ── SYSTEM BACKUPS TAB ────────────────────────────────────────────────
+  else if (editorSubTab === 'backup') {
+    subContent = `
+      <div class="editor-section animate-fade-in">
+        <h3 class="editor-section-title">💾 Database Backup & Restore</h3>
+        <p class="editor-section-desc">Export the entire local database state (organizations, employees, attendance records, statutory configs) to a local JSON file, or restore from a backup.</p>
+        <div style="display:flex; gap:16px; margin-top:20px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="exportDatabaseBackup()">📥 Export Database Backup</button>
+          <div>
+            <button class="btn btn-secondary" onclick="document.getElementById('editor-restore-input').click()">📤 Upload & Restore Backup</button>
+            <input type="file" id="editor-restore-input" style="display:none;" accept=".json" onchange="importDatabaseBackup(event)">
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   return `
     <div class="animate-in">
       <div class="page-header" style="margin-bottom:24px;">
         <div class="page-header-left">
           <h2>🛠️ Website Editor</h2>
-          <p>No-code customization panel — modify branding, announcements, pages, features, and Google account linking.</p>
+          <p>No-code customization panel — modify branding, announcements, pages, features, custom CSS, and backups.</p>
         </div>
       </div>
 
@@ -623,6 +700,8 @@ function renderWebsiteEditor() {
         ${subTabBtn('flags', 'Feature Flags', '🎛️')}
         ${subTabBtn('widgets', 'Widgets', '🧩')}
         ${subTabBtn('google', 'Google Accounts', '🔐')}
+        ${subTabBtn('advanced', 'Advanced CSS', '💻')}
+        ${subTabBtn('backup', 'Backups', '💾')}
       </div>
 
       ${subContent}
@@ -812,6 +891,31 @@ function deleteGoogleAccountFromEditor(index) {
   renderWebsiteEditor();
 }
 
+function applyThemePreset(color, emoji) {
+  const colorInput = document.getElementById('ed-primary-color');
+  const emojiInput = document.getElementById('ed-logo-emoji');
+  const hexDisplay = document.getElementById('ed-color-hex');
+  if (colorInput) colorInput.value = color;
+  if (emojiInput) emojiInput.value = emoji;
+  if (hexDisplay) hexDisplay.textContent = color;
+  
+  // Update the mock live preview logo
+  const previewIcon = document.querySelector('.editor-preview-box .preview-sidebar-mock div div');
+  if (previewIcon) {
+    previewIcon.style.background = `linear-gradient(135deg, ${color}, #4f46e5)`;
+    previewIcon.textContent = emoji;
+  }
+}
+window.applyThemePreset = applyThemePreset;
+
+function saveCustomCssFromEditor() {
+  const css = document.getElementById('ed-custom-css').value;
+  localStorage.setItem('symbiosis_custom_css', css);
+  applyCustomCSS();
+  showToast('CSS Injected', 'Your custom styles have been applied and saved.', 'success');
+}
+window.saveCustomCssFromEditor = saveCustomCssFromEditor;
+
 // ── WYSIWYG helpers ──────────────────────────────────────────────────────
 
 function editorInsertLink() {
@@ -950,5 +1054,8 @@ export {
   deleteGoogleAccountFromEditor,
   editorInsertLink,
   editorInsertImage,
-  editorInsertTable
+  editorInsertTable,
+  switchEditorSubTab,
+  applyThemePreset,
+  saveCustomCssFromEditor
 };
