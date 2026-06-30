@@ -1533,14 +1533,24 @@ async function handleLoginSubmit(e) {
     renderOtpVerificationScreen(obfuscatedEmail, otp);
   } catch (err) {
     const petCard = document.querySelector('.pet-card');
-    const bubble = document.getElementById('pet-bubble');
-    const status = document.getElementById('pet-status');
+    const closedEyes = document.getElementById('closed-eyes');
+    const eyesBg = document.getElementById('eyes-bg');
+    const pupilsGroup = document.getElementById('pupils');
+    
     if (petCard) {
       petCard.classList.add('pet-shaking');
       setTimeout(() => petCard.classList.remove('pet-shaking'), 500);
     }
-    if (bubble) bubble.textContent = "Oops! " + err.message;
-    if (status) status.textContent = "Confused";
+    
+    if (closedEyes) closedEyes.style.display = 'block';
+    if (eyesBg) eyesBg.style.display = 'none';
+    if (pupilsGroup) pupilsGroup.style.display = 'none';
+    
+    setTimeout(() => {
+      if (closedEyes) closedEyes.style.display = 'none';
+      if (eyesBg) eyesBg.style.display = 'block';
+      if (pupilsGroup) pupilsGroup.style.display = 'block';
+    }, 1500);
 
     alert("Authentication Failed: " + err.message);
     const submitBtn = document.querySelector('.login-submit');
@@ -1604,13 +1614,15 @@ function handleOtpSubmit(e) {
   
   if (enteredCode === String(state.tempOtpCode)) {
     const petCard = document.querySelector('.pet-card');
-    const bubble = document.getElementById('pet-bubble');
-    const status = document.getElementById('pet-status');
+    const mouthSmile = document.getElementById('mouth-smile');
+    const mouthO = document.getElementById('mouth-o');
+    
     if (petCard) {
       petCard.classList.add('pet-dancing');
     }
-    if (bubble) bubble.textContent = "Success! Access granted! Launching system...";
-    if (status) status.textContent = "Celebrating";
+    
+    if (mouthSmile) mouthSmile.style.display = 'block';
+    if (mouthO) mouthO.style.display = 'none';
 
     // Authenticate user
     const { role, targetOrgId, targetEmpId } = state.tempLogin;
@@ -1637,14 +1649,24 @@ function handleOtpSubmit(e) {
     }, 850);
   } else {
     const petCard = document.querySelector('.pet-card');
-    const bubble = document.getElementById('pet-bubble');
-    const status = document.getElementById('pet-status');
+    const closedEyes = document.getElementById('closed-eyes');
+    const eyesBg = document.getElementById('eyes-bg');
+    const pupilsGroup = document.getElementById('pupils');
+    
     if (petCard) {
       petCard.classList.add('pet-shaking');
       setTimeout(() => petCard.classList.remove('pet-shaking'), 500);
     }
-    if (bubble) bubble.textContent = "Oh no, that OTP code doesn't match the Gmail alert!";
-    if (status) status.textContent = "Perplexed";
+    
+    if (closedEyes) closedEyes.style.display = 'block';
+    if (eyesBg) eyesBg.style.display = 'none';
+    if (pupilsGroup) pupilsGroup.style.display = 'none';
+    
+    setTimeout(() => {
+      if (closedEyes) closedEyes.style.display = 'none';
+      if (eyesBg) eyesBg.style.display = 'block';
+      if (pupilsGroup) pupilsGroup.style.display = 'block';
+    }, 1500);
 
     alert("Incorrect OTP. Please enter the valid code sent in the Gmail simulated notification.");
   }
@@ -1918,6 +1940,7 @@ async function renderLoginPage() {
   await db.preloadOrgsOnly();
   const orgs = db.getOrganizations();
   const b = getBranding();
+  const logo = (b.logoEmoji && b.logoEmoji.trim() !== '') ? b.logoEmoji : '💼';
 
   container.innerHTML = `
     <!-- Living Canvas Background -->
@@ -1927,7 +1950,7 @@ async function renderLoginPage() {
       <!-- Column 1: Login Card -->
       <div class="login-card">
         <div class="login-card-top">
-          <div class="login-icon">${b.logoEmoji || '💼'}</div>
+          <div class="login-icon">${logo}</div>
           <h2>${b.appName || 'HR Payroll'} System</h2>
           <p>${b.loginMessage || 'India Labour Law Compliant · Multi-tenant'}</p>
         </div>
@@ -1990,11 +2013,8 @@ async function renderLoginPage() {
         </div>
       </div>
 
-      <!-- Column 2: Symbio Virtual Pet Assistant Card -->
+      <!-- Floating Symbio Mascot -->
       <div class="pet-card">
-        <div class="pet-speech-bubble" id="pet-bubble">
-          Hi! I am Symbio, your compliance helper. Choose a role to get started!
-        </div>
         <div class="pet-mascot-container" id="symbio-container">
           <svg id="symbio-svg" viewBox="0 0 200 200" width="160" height="160">
             <!-- Left Ear -->
@@ -2015,8 +2035,10 @@ async function renderLoginPage() {
             <rect x="50" y="70" width="100" height="85" rx="35" fill="#6366f1" />
             
             <!-- Eyes White -->
-            <ellipse cx="75" cy="105" rx="16" ry="20" fill="white" />
-            <ellipse cx="125" cy="105" rx="16" ry="20" fill="white" />
+            <g id="eyes-bg">
+              <ellipse class="eye-bg-l" cx="75" cy="105" rx="16" ry="20" fill="white" />
+              <ellipse class="eye-bg-r" cx="125" cy="105" rx="16" ry="20" fill="white" />
+            </g>
             
             <!-- Pupils Group -->
             <g id="pupils">
@@ -2025,10 +2047,25 @@ async function renderLoginPage() {
               <circle cx="125" cy="105" r="8" fill="#1e1b4b" />
               <circle cx="123" cy="102" r="3" fill="white" />
             </g>
+
+            <!-- Closed Eyes (For blinking or errors) -->
+            <g id="closed-eyes" style="display: none;">
+              <path d="M 60 105 Q 75 95 90 105" fill="none" stroke="#1e1b4b" stroke-width="4" stroke-linecap="round" />
+              <path d="M 110 105 Q 125 95 140 105" fill="none" stroke="#1e1b4b" stroke-width="4" stroke-linecap="round" />
+            </g>
+            
+            <!-- Blush Cheeks -->
+            <g id="blush" style="display: none; opacity: 0.5;">
+              <ellipse cx="60" cy="115" rx="12" ry="6" fill="#f43f5e" />
+              <ellipse cx="140" cy="115" rx="12" ry="6" fill="#f43f5e" />
+            </g>
             
             <!-- Nose & Mouth -->
             <polygon points="96,118 104,118 100,122" fill="#f472b6" />
-            <path d="M 95 125 Q 100 128 100 125 T 105 125" fill="none" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
+            <!-- Default Smile -->
+            <path id="mouth-smile" d="M 95 125 Q 100 128 100 125 T 105 125" fill="none" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
+            <!-- Focused / O-Mouth -->
+            <ellipse id="mouth-o" cx="100" cy="126" rx="3" ry="4" fill="#1e1b4b" style="display: none;" />
             
             <!-- Whiskers -->
             <line x1="35" y1="120" x2="15" y2="122" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
@@ -2056,10 +2093,6 @@ async function renderLoginPage() {
               <circle cx="136" cy="162" r="4" fill="#a5b4fc" />
             </g>
           </svg>
-        </div>
-        <div class="pet-stats">
-          <h4>🐱 Symbio Assistant</h4>
-          <p>Status: <span id="pet-status">Idle</span></p>
         </div>
       </div>
     </div>
@@ -2145,9 +2178,11 @@ function initLoginBackgroundCanvas() {
 function initSymbioMascot() {
   const container = document.getElementById('symbio-container');
   const pupils = document.getElementById('pupils');
-  const bubble = document.getElementById('pet-bubble');
-  const status = document.getElementById('pet-status');
   const petCard = document.querySelector('.pet-card');
+  
+  const mouthSmile = document.getElementById('mouth-smile');
+  const mouthO = document.getElementById('mouth-o');
+  const blush = document.getElementById('blush');
   
   if (!container || !pupils) return;
 
@@ -2180,24 +2215,6 @@ function initSymbioMascot() {
     requestAnimationFrame(animatePet);
   }
 
-  const idleMessages = [
-    "EPF basic wage cap is ₹15,000.",
-    "Did you know? ESI basic wage limit is ₹21,000.",
-    "Click a role to toggle demo values automatically!",
-    "Our reports module features full print layouts.",
-    "I follow your cursor! Try moving it around.",
-    "Symbiosis is 100% compliant with Indian Tax regulations."
-  ];
-
-  let messageTimer = setInterval(() => {
-    if (!document.getElementById('pet-bubble')) {
-      clearInterval(messageTimer);
-      return;
-    }
-    const idx = Math.floor(Math.random() * idleMessages.length);
-    bubble.textContent = idleMessages[idx];
-  }, 12000);
-
   window.addEventListener('mousemove', (e) => {
     if (!pupils || !document.getElementById('pupils')) return;
     
@@ -2223,24 +2240,24 @@ function initSymbioMascot() {
   if (username) {
     username.addEventListener('focus', () => {
       container.classList.remove('hiding-eyes');
-      bubble.textContent = "Okay, what is your username or linked email?";
-      status.textContent = "Analyzing input...";
+      if (mouthSmile) mouthSmile.style.display = 'none';
+      if (mouthO) mouthO.style.display = 'block';
       pupils.style.transform = `translate(0px, 4px)`;
     });
     username.addEventListener('blur', () => {
-      status.textContent = "Idle";
+      if (mouthSmile) mouthSmile.style.display = 'block';
+      if (mouthO) mouthO.style.display = 'none';
     });
   }
 
   if (password) {
     password.addEventListener('focus', () => {
       container.classList.add('hiding-eyes');
-      bubble.textContent = "Ooh, password! Don't worry, I'm hiding my eyes.";
-      status.textContent = "Respecting privacy";
+      if (blush) blush.style.display = 'block';
     });
     password.addEventListener('blur', () => {
       container.classList.remove('hiding-eyes');
-      status.textContent = "Idle";
+      if (blush) blush.style.display = 'none';
     });
   }
 }

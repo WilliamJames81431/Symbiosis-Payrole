@@ -2731,51 +2731,6 @@ select.form-control option {
   /* removed the border/shadow hover since it has no card background now */
 }
 
-/* Speech Bubble */
-.pet-speech-bubble {
-  position: relative;
-  background: var(--primary-light);
-  border: 1px solid var(--primary-glow);
-  color: var(--primary);
-  padding: 12px 16px;
-  border-radius: 16px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1.4;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 20px;
-  animation: floatBubble 3s ease-in-out infinite;
-}
-
-.pet-speech-bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 8px 8px 0;
-  border-style: solid;
-  border-color: var(--primary-light) transparent;
-  display: block;
-  width: 0;
-}
-
-.pet-speech-bubble::before {
-  content: '';
-  position: absolute;
-  bottom: -9px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 9px 9px 0;
-  border-style: solid;
-  border-color: var(--primary-glow) transparent;
-  display: block;
-  width: 0;
-  z-index: -1;
-}
-
 /* Mascot SVG Styling & Animations */
 .pet-mascot-container {
   display: flex;
@@ -2829,29 +2784,7 @@ select.form-control option {
   animation: dancePet 1.5s infinite alternate ease-in-out;
 }
 
-/* Pet Stats */
-.pet-stats {
-  text-align: center;
-  margin-top: 16px;
-  width: 100%;
-}
-.pet-stats h4 {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text-h);
-  margin-bottom: 4px;
-}
-.pet-stats p {
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
 /* Keyframes */
-@keyframes floatBubble {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
 
 @keyframes wiggleEarL {
   0%, 90%, 100% { transform: rotate(0deg); }
