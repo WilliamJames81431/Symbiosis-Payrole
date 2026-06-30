@@ -39,7 +39,9 @@ const EDITOR_KEYS = {
   CUSTOM_PAGES: 'symbiosis_custom_pages',
   FEATURE_FLAGS: 'symbiosis_feature_flags',
   WIDGET_ORDER: 'symbiosis_widget_order',
-  GOOGLE_ACCOUNTS: 'symbiosis_google_accounts'
+  GOOGLE_ACCOUNTS: 'symbiosis_google_accounts',
+  SUPABASE_URL: 'symbiosis_supabase_url',
+  SUPABASE_KEY: 'symbiosis_supabase_key'
 };
 
 const DEFAULT_BRANDING = {
@@ -95,6 +97,9 @@ function getBranding() {
 
 function saveBranding(branding) {
   localStorage.setItem(EDITOR_KEYS.BRANDING, JSON.stringify(branding));
+  if (window.supabaseClientInstance) {
+    window.supabaseClientInstance.from('app_config').upsert({ key: 'branding', value: branding }).then();
+  }
 }
 
 function getAnnouncements() {
@@ -106,6 +111,9 @@ function getAnnouncements() {
 
 function saveAnnouncements(announcements) {
   localStorage.setItem(EDITOR_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+  if (window.supabaseClientInstance) {
+    window.supabaseClientInstance.from('app_config').upsert({ key: 'announcements', value: announcements }).then();
+  }
 }
 
 function getCustomPages() {
@@ -117,7 +125,31 @@ function getCustomPages() {
 
 function saveCustomPages(pages) {
   localStorage.setItem(EDITOR_KEYS.CUSTOM_PAGES, JSON.stringify(pages));
+  if (window.supabaseClientInstance) {
+    window.supabaseClientInstance.from('app_config').upsert({ key: 'custom_pages', value: pages }).then();
+  }
 }
+
+// Preloads branding, custom pages, announcements, feature flags and accounts from Supabase config table
+async function preloadAppConfigFromSupabase() {
+  if (!window.supabaseClientInstance) return;
+  try {
+    const { data, error } = await window.supabaseClientInstance.from('app_config').select('*');
+    if (!error && data) {
+      data.forEach(item => {
+        if (item.key === 'branding') localStorage.setItem(EDITOR_KEYS.BRANDING, JSON.stringify(item.value));
+        else if (item.key === 'announcements') localStorage.setItem(EDITOR_KEYS.ANNOUNCEMENTS, JSON.stringify(item.value));
+        else if (item.key === 'custom_pages') localStorage.setItem(EDITOR_KEYS.CUSTOM_PAGES, JSON.stringify(item.value));
+        else if (item.key === 'feature_flags') localStorage.setItem(EDITOR_KEYS.FEATURE_FLAGS, JSON.stringify(item.value));
+        else if (item.key === 'google_accounts') localStorage.setItem(EDITOR_KEYS.GOOGLE_ACCOUNTS, JSON.stringify(item.value));
+      });
+      if (typeof applyBranding === 'function') applyBranding();
+    }
+  } catch (err) {
+    console.error("Failed to preload app config from Supabase:", err);
+  }
+}
+window.preloadAppConfigFromSupabase = preloadAppConfigFromSupabase;
 
 function getFeatureFlags() {
   try {
@@ -128,6 +160,9 @@ function getFeatureFlags() {
 
 function saveFeatureFlags(flags) {
   localStorage.setItem(EDITOR_KEYS.FEATURE_FLAGS, JSON.stringify(flags));
+  if (window.supabaseClientInstance) {
+    window.supabaseClientInstance.from('app_config').upsert({ key: 'feature_flags', value: flags }).then();
+  }
 }
 
 function getWidgetOrder() {
@@ -137,8 +172,12 @@ function getWidgetOrder() {
   } catch { return { enabled: ['stats','dept-chart','attendance-chart','compliance-checklist','epf-simulator'], disabled: [] }; }
 }
 
+// Saves bento widget layout configurations to Supabase
 function saveWidgetOrder(order) {
   localStorage.setItem(EDITOR_KEYS.WIDGET_ORDER, JSON.stringify(order));
+  if (window.supabaseClientInstance) {
+    window.supabaseClientInstance.from('app_config').upsert({ key: 'widget_order', value: order }).then();
+  }
 }
 
 function getGoogleAccounts() {
@@ -150,6 +189,9 @@ function getGoogleAccounts() {
 
 function saveGoogleAccounts(accounts) {
   localStorage.setItem(EDITOR_KEYS.GOOGLE_ACCOUNTS, JSON.stringify(accounts));
+  if (window.supabaseClientInstance) {
+    window.supabaseClientInstance.from('app_config').upsert({ key: 'google_accounts', value: accounts }).then();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -683,6 +725,44 @@ function renderWebsiteEditor() {
       </div>
     `;
   }
+  // ── SUPABASE CONFIG TAB ───────────────────────────────────────────────
+  else if (editorSubTab === 'supabase') {
+    const sbUrl = localStorage.getItem('symbiosis_supabase_url') || '';
+    const sbKey = localStorage.getItem('symbiosis_supabase_key') || '';
+    const isConnected = window.supabaseClientInstance ? 'Connected' : 'Not Connected (Fallback to LocalStorage active)';
+    const statusColor = window.supabaseClientInstance ? 'var(--success)' : 'var(--warning)';
+
+    subContent = `
+      <div class="editor-section animate-fade-in">
+        <h3 class="editor-section-title">⚡ Supabase Database Integration</h3>
+        <p class="editor-section-desc">Connect the application to a live, hosted PostgreSQL database on Supabase. If credentials are empty or the database is unreachable, the app automatically runs on local mock database tables.</p>
+        
+        <div class="editor-form-grid">
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Supabase Connection Status</label>
+            <div style="font-weight:700; color:${statusColor}; font-size:0.9rem; padding:8px 12px; background:var(--card-bg); border:1px solid var(--card-border); border-radius:8px; display:inline-block;">
+              ● ${isConnected}
+            </div>
+          </div>
+
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Supabase Project URL</label>
+            <input class="form-control" type="text" id="ed-sb-url" value="${sbUrl}" placeholder="https://xxxxxxxxxxxxxx.supabase.co" style="font-family:monospace;">
+          </div>
+
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Supabase Anon Public API Key</label>
+            <input class="form-control" type="password" id="ed-sb-key" value="${sbKey}" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="font-family:monospace;">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn btn-primary" onclick="saveSupabaseConfigFromEditor()">💾 Save & Test Connection</button>
+          <button class="btn btn-secondary" onclick="seedSupabaseTablesFromEditor()">🌱 Seed Default Tables</button>
+        </div>
+      </div>
+    `;
+  }
 
   return `
     <div class="animate-in">
@@ -700,6 +780,7 @@ function renderWebsiteEditor() {
         ${subTabBtn('flags', 'Feature Flags', '🎛️')}
         ${subTabBtn('widgets', 'Widgets', '🧩')}
         ${subTabBtn('google', 'Google Accounts', '🔐')}
+        ${subTabBtn('supabase', 'Supabase DB', '⚡')}
         ${subTabBtn('advanced', 'Advanced CSS', '💻')}
         ${subTabBtn('backup', 'Backups', '💾')}
       </div>
@@ -916,6 +997,70 @@ function saveCustomCssFromEditor() {
 }
 window.saveCustomCssFromEditor = saveCustomCssFromEditor;
 
+function saveSupabaseConfigFromEditor() {
+  const url = document.getElementById('ed-sb-url').value.trim();
+  const key = document.getElementById('ed-sb-key').value.trim();
+  
+  if (url) localStorage.setItem('symbiosis_supabase_url', url);
+  else localStorage.removeItem('symbiosis_supabase_url');
+  
+  if (key) localStorage.setItem('symbiosis_supabase_key', key);
+  else localStorage.removeItem('symbiosis_supabase_key');
+
+  if (typeof window.initSupabaseClient === 'function') {
+    window.initSupabaseClient();
+  }
+
+  setTimeout(() => {
+    switchEditorSubTab('supabase');
+    if (window.supabaseClientInstance) {
+      showToast('Connected!', 'Successfully connected to Supabase.', 'success');
+    } else {
+      showToast('Connection Failed', 'Could not reach Supabase. Falls back to localStorage.', 'warning');
+    }
+  }, 500);
+}
+window.saveSupabaseConfigFromEditor = saveSupabaseConfigFromEditor;
+
+async function seedSupabaseTablesFromEditor() {
+  if (!window.supabaseClientInstance) {
+    alert('Please connect to Supabase first before seeding.');
+    return;
+  }
+  if (!confirm('This will seed default organizations and employee roster records to your live Supabase database. Proceed?')) return;
+  
+  try {
+    showToast('Seeding...', 'Uploading default data tables to Supabase...', 'info');
+    
+    // Seed organizations
+    const { error: orgErr } = await window.supabaseClientInstance
+      .from('organizations')
+      .upsert([
+        { org_id: 'org_tata', name: 'Tata Consultancy Services (TCS)', epf_rate: 12, minimum_wage: 12000, basic_pct: 60, ot_rate: 250, state_pt: 'telangana' },
+        { org_id: 'org_infy', name: 'Infosys Technologies Ltd', epf_rate: 12, minimum_wage: 10000, basic_pct: 50, ot_rate: 200, state_pt: 'karnataka' },
+        { org_id: 'org_reliance', name: 'Reliance Industries Limited', epf_rate: 12, minimum_wage: 15000, basic_pct: 55, ot_rate: 300, state_pt: 'maharashtra' }
+      ]);
+    if (orgErr) throw orgErr;
+
+    // Seed employees
+    const { error: empErr } = await window.supabaseClientInstance
+      .from('employees')
+      .upsert([
+        { emp_id: 'EMP101', org_id: 'org_tata', name: 'Aarav Sharma', doj: '2024-01-15', exit_date: null, ctc: 80000, department: 'Engineering', designation: 'Lead Developer', bank_account: 'HDFC 9876543210', bank_name: 'HDFC Bank', ifsc_code: 'HDFC0001234', epf_eligible: true, esi_eligible: false, status: 'Active', tds_rate: null, rent_paid: 12000, tax_80c: 45000, tax_80d: 12500, other_income: 0, landlord_pan: 'ABCDE1234F', pan: 'ABCDE1234F', aadhaar: '123456789012' },
+        { emp_id: 'EMP102', org_id: 'org_tata', name: 'Priya Patel', doj: '2026-06-05', exit_date: null, ctc: 45000, department: 'Marketing', designation: 'Graphic Designer', bank_account: 'ICICI 1234567890', bank_name: 'ICICI Bank', ifsc_code: 'ICIC0002345', epf_eligible: true, esi_eligible: false, status: 'Active', tds_rate: 5, rent_paid: 0, tax_80c: 0, tax_80d: 0, other_income: 0, landlord_pan: '', pan: 'XYZAB5678C', aadhaar: '987654321098' },
+        { emp_id: 'EMP103', org_id: 'org_tata', name: 'Rohan Das', doj: '2023-03-10', exit_date: '2026-06-20', ctc: 20000, department: 'Operations', designation: 'Operations Executive', bank_account: 'SBI 1122334455', bank_name: 'State Bank of India', ifsc_code: 'SBIN0003456', epf_eligible: false, esi_eligible: true, status: 'Active', tds_rate: 0, rent_paid: 0, tax_80c: 0, tax_80d: 0, other_income: 0, landlord_pan: '', pan: 'LMNOP1234Q', aadhaar: '111122223333' },
+        { emp_id: 'EMP104', org_id: 'org_tata', name: 'Ananya Iyer', doj: '2025-11-01', exit_date: null, ctc: 150000, department: 'Human Resources', designation: 'HR Director', bank_account: 'Axis 5566778899', bank_name: 'Axis Bank', ifsc_code: 'UTIB0004567', epf_eligible: true, esi_eligible: false, status: 'Active', tds_rate: null, rent_paid: 25000, tax_80c: 120000, tax_80d: 25000, other_income: 15000, landlord_pan: 'PQRST5678U', pan: 'PQRST5678U', aadhaar: '555566667777' },
+        { emp_id: 'EMP105', org_id: 'org_tata', name: 'Kabir Malhotra', doj: '2026-06-25', exit_date: null, ctc: 18000, department: 'Customer Support', designation: 'Support Associate', bank_account: 'HDFC 4455667788', bank_name: 'HDFC Bank', ifsc_code: 'HDFC0005678', epf_eligible: true, esi_eligible: true, status: 'Active', tds_rate: 0, rent_paid: 0, tax_80c: 0, tax_80d: 0, other_income: 0, landlord_pan: '', pan: 'DEFGH9012I', aadhaar: '888899990000' }
+      ]);
+    if (empErr) throw empErr;
+
+    showToast('Seed Complete!', 'Default tables successfully synced to Supabase!', 'success');
+  } catch (err) {
+    alert('Seeding failed. Make sure you ran the SQL script in your Supabase SQL Editor first.\n\nError: ' + err.message);
+  }
+}
+window.seedSupabaseTablesFromEditor = seedSupabaseTablesFromEditor;
+
 // ── WYSIWYG helpers ──────────────────────────────────────────────────────
 
 function editorInsertLink() {
@@ -950,7 +1095,7 @@ function getModuleLabel(role, key) {
 // 9. GOOGLE SIGN-IN HANDLER (called from login page)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function handleGoogleCredentialResponse(response) {
+async function handleGoogleCredentialResponse(response) {
   // Decode the JWT token from Google
   const payload = parseJwt(response.credential);
   if (!payload || !payload.email) {
@@ -962,9 +1107,24 @@ function handleGoogleCredentialResponse(response) {
   const name = payload.name || email;
   const picture = payload.picture || null;
 
+  // If Supabase is configured, register/authenticate user session
+  if (window.supabaseClientInstance) {
+    try {
+      console.log(`[Supabase Auth] Authenticating Google credential...`);
+      const { data, error } = await window.supabaseClientInstance.auth.signInWithIdToken({
+        provider: 'google',
+        token: response.credential
+      });
+      if (error) throw error;
+      console.log(`[Supabase Auth] Authenticated user email: ${data.user.email}`);
+    } catch (err) {
+      console.warn('[Supabase Auth] ID token verification skipped:', err.message);
+    }
+  }
+
   // Look up email in linked accounts
   const accounts = getGoogleAccounts();
-  const match = accounts.find(a => a.email === email);
+  const match = accounts.find(a => a.email.toLowerCase() === email);
 
   if (!match) {
     // No linked account found

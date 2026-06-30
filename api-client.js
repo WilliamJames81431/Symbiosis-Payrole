@@ -274,6 +274,67 @@ function handleSessionExpiry() {
 // ─────────────────────────────────────────────────────────────────
 const AuthAPI = {
   async login(username, password) {
+    if (_supabase) {
+      try {
+        console.log(`[Supabase] Authenticating user: ${username}...`);
+        let email = username;
+        if (!username.includes('@')) {
+          email = LOCAL_CREDENTIALS[username]?.email || `${username}@symbiosis.in`;
+        }
+
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        const loggedEmail = data.user.email.toLowerCase();
+        
+        // Find role mapping
+        let match = null;
+        try {
+          const accountsData = localStorage.getItem('symbiosis_google_accounts');
+          const accounts = accountsData ? JSON.parse(accountsData) : [
+            { email: 'system@symbiosis.in', role: 'ERP', orgId: 'org_tata', empId: null },
+            { email: 'hr@tata.in', role: 'HR', orgId: 'org_tata', empId: null },
+            { email: 'hr@infy.in', role: 'HR', orgId: 'org_infy', empId: null },
+            { email: 'aarav@tata.in', role: 'Employee', orgId: 'org_tata', empId: 'EMP101' }
+          ];
+          match = accounts.find(a => a.email.toLowerCase() === loggedEmail);
+        } catch {}
+
+        if (!match) {
+          const cred = LOCAL_CREDENTIALS[username];
+          if (cred) {
+            match = { role: cred.role, orgId: cred.org_id, empId: cred.emp_id };
+          }
+        }
+
+        if (!match) {
+          throw new Error(`Your email ${loggedEmail} is authenticated in Supabase but not linked to any role in this system.`);
+        }
+
+        const payload = {
+          role: match.role,
+          org_id: match.orgId,
+          emp_id: match.empId || null,
+          email: loggedEmail,
+          username: username,
+          exp: Math.floor(Date.now() / 1000) + 86400
+        };
+        TokenStore.setLocalPayload(payload);
+
+        if (window.state) {
+          window.state.isLoggedIn = true;
+          window.state.currentRole = payload.role;
+          window.state.currentOrgId = payload.org_id;
+          window.state.currentUser = username;
+          window.state.currentEmployeeId = payload.emp_id || null;
+        }
+
+        return { username, role: payload.role, org_id: payload.org_id };
+      } catch (err) {
+        console.warn('[Supabase Auth] Sign in failed, using local auth fallback:', err.message);
+      }
+    }
+
     // Try real backend first
     const backendUp = await checkBackendAvailability();
 
@@ -698,6 +759,74 @@ function triggerDownload(blob, filename, mimeType) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// SUPABASE CLIENT INITIALIZATION & QUERY ADAPTERS
+// ─────────────────────────────────────────────────────────────────
+let _supabase = null;
+
+function initSupabaseClient() {
+  const url = localStorage.getItem('symbiosis_supabase_url');
+  const key = localStorage.getItem('symbiosis_supabase_key');
+  
+  if (url && key && typeof supabase !== 'undefined') {
+    try {
+      _supabase = supabase.createClient(url, key);
+      window.supabaseClientInstance = _supabase;
+      console.log("Supabase Client successfully connected!");
+      
+      // Auto-load app settings config
+      if (typeof window.preloadAppConfigFromSupabase === 'function') {
+        window.preloadAppConfigFromSupabase();
+      }
+      return _supabase;
+    } catch (e) {
+      console.error("Failed to initialize Supabase:", e);
+      _supabase = null;
+      window.supabaseClientInstance = null;
+      return null;
+    }
+  } else {
+    _supabase = null;
+    window.supabaseClientInstance = null;
+    return null;
+  }
+}
+window.initSupabaseClient = initSupabaseClient;
+
+// Auto init on module load
+setTimeout(initSupabaseClient, 100);
+
+async function querySupabase(table, action, data = null, filters = {}) {
+  if (!_supabase) return null;
+  try {
+    let query = _supabase.from(table);
+    if (action === 'SELECT') {
+      let run = query.select('*');
+      for (const [col, val] of Object.entries(filters)) {
+        run = run.eq(col, val);
+      }
+      const { data: res, error } = await run;
+      if (error) throw error;
+      return res;
+    } else if (action === 'UPSERT') {
+      const { data: res, error } = await query.upsert(data);
+      if (error) throw error;
+      return res;
+    } else if (action === 'DELETE') {
+      let run = query.delete();
+      for (const [col, val] of Object.entries(filters)) {
+        run = run.eq(col, val);
+      }
+      const { data: res, error } = await run;
+      if (error) throw error;
+      return res;
+    }
+  } catch (err) {
+    console.error(`Supabase error on ${table} (${action}):`, err);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
 // LOCAL DATABASE SHIM — ApiDatabase
 // ─────────────────────────────────────────────────────────────────
 class ApiDatabase {
@@ -713,6 +842,105 @@ class ApiDatabase {
   }
 
   async preloadAll(orgId, monthYear, empId, role) {
+    if (_supabase) {
+      try {
+        console.log(`[Supabase] Preloading database for role: ${role}...`);
+        
+        // 1. Load organizations
+        const orgs = await querySupabase('organizations', 'SELECT');
+        if (orgs) this.cache.organizations = orgs;
+
+        const oId = orgId || window.state?.currentOrgId;
+        const my = monthYear || window.state?.activeMonthYear;
+
+        if (role === 'ERP') {
+          for (const org of this.cache.organizations) {
+            const currentId = org.org_id;
+            const emps = await querySupabase('employees', 'SELECT', null, { org_id: currentId });
+            if (emps) this.cache.employees[currentId] = emps;
+            
+            const runs = await querySupabase('payroll_ledger', 'SELECT', null, { org_id: currentId });
+            if (runs) {
+              if (!this.cache.ledger[currentId]) this.cache.ledger[currentId] = {};
+              runs.forEach(r => {
+                this.cache.ledger[currentId][r.month_year] = {
+                  status: r.status,
+                  approved_by: r.approved_by,
+                  approved_date: r.approved_date,
+                  records: r.records,
+                  adjustments_log: r.adjustments_log || []
+                };
+              });
+            }
+          }
+        } else if (role === 'HR') {
+          if (oId) {
+            const emps = await querySupabase('employees', 'SELECT', null, { org_id: oId });
+            if (emps) this.cache.employees[oId] = emps;
+
+            const schemas = await querySupabase('app_config', 'SELECT', null, { key: `schema_${oId}` });
+            if (schemas && schemas.length > 0) {
+              this.cache.schemas[oId] = schemas[0].value;
+            } else {
+              this.cache.schemas[oId] = { emp_id: 0, employee_name: 1, D1: 2, overtime_hours: 33 };
+            }
+
+            if (my) {
+              const atts = await querySupabase('attendance', 'SELECT', null, { org_id: oId, month_year: my });
+              if (atts) {
+                this.cache.attendance[`${oId}_${my}`] = atts.map(a => ({
+                  emp_id: a.emp_id,
+                  name: '',
+                  month_year: a.month_year,
+                  days: a.days,
+                  ot: a.ot_hours
+                }));
+              }
+            }
+
+            const runs = await querySupabase('payroll_ledger', 'SELECT', null, { org_id: oId });
+            if (runs) {
+              if (!this.cache.ledger[oId]) this.cache.ledger[oId] = {};
+              runs.forEach(r => {
+                this.cache.ledger[oId][r.month_year] = {
+                  status: r.status,
+                  approved_by: r.approved_by,
+                  approved_date: r.approved_date,
+                  records: r.records,
+                  adjustments_log: r.adjustments_log || []
+                };
+              });
+            }
+          }
+        } else if (role === 'Employee') {
+          const activeEmpId = empId || window.state?.currentEmployeeId;
+          if (activeEmpId && oId) {
+            const emps = await querySupabase('employees', 'SELECT', null, { emp_id: activeEmpId, org_id: oId });
+            if (emps && emps.length > 0) {
+              this.cache.employeeSelf = emps[0];
+            }
+            
+            const runs = await querySupabase('payroll_ledger', 'SELECT', null, { org_id: oId });
+            if (runs) {
+              if (!this.cache.ledger[oId]) this.cache.ledger[oId] = {};
+              runs.forEach(r => {
+                this.cache.ledger[oId][r.month_year] = {
+                  status: r.status,
+                  approved_by: r.approved_by,
+                  approved_date: r.approved_date,
+                  records: r.records,
+                  adjustments_log: r.adjustments_log || []
+                };
+              });
+            }
+          }
+        }
+        return;
+      } catch (err) {
+        console.error('[Supabase] Preload failed, falling back to LocalStorage:', err);
+      }
+    }
+
     try {
       // Check backend availability first
       await checkBackendAvailability();
@@ -858,15 +1086,37 @@ class ApiDatabase {
     return lsEmployees().find(e => e.emp_id === empId) || null;
   }
   async createEmployee(employee) {
-    const res = await EmployeesAPI.create(employee);
+    if (_supabase) {
+      try {
+        await querySupabase('employees', 'UPSERT', employee);
+      } catch (err) {
+        console.error("[Supabase] createEmployee failed:", err);
+      }
+    }
+    try { await EmployeesAPI.create(employee); } catch {}
     const oId = employee.org_id || window.state?.currentOrgId;
     if (!this.cache.employees[oId]) this.cache.employees[oId] = [];
     this.cache.employees[oId].push(employee);
-    return res;
+    // Sync fallback
+    const emps = lsEmployees();
+    emps.push(employee);
+    LS.set('symbiosis_employees', emps);
+    return { success: true };
   }
   async updateEmployee(empId, data) {
-    const res = await EmployeesAPI.update(empId, data);
     const oId = data.org_id || window.state?.currentOrgId;
+    if (_supabase) {
+      try {
+        const emps = await querySupabase('employees', 'SELECT', null, { emp_id: empId, org_id: oId });
+        if (emps && emps.length > 0) {
+          const merged = { ...emps[0], ...data };
+          await querySupabase('employees', 'UPSERT', merged);
+        }
+      } catch (err) {
+        console.error("[Supabase] updateEmployee failed:", err);
+      }
+    }
+    try { await EmployeesAPI.update(empId, data); } catch {}
     if (this.cache.employees[oId]) {
       const idx = this.cache.employees[oId].findIndex(e => e.emp_id === empId);
       if (idx !== -1) this.cache.employees[oId][idx] = { ...this.cache.employees[oId][idx], ...data };
@@ -874,16 +1124,41 @@ class ApiDatabase {
     if (window.state?.currentRole === 'Employee' && window.state?.currentEmployeeId === empId) {
       this.cache.employeeSelf = { ...this.cache.employeeSelf, ...data };
     }
-    return res;
+    // Sync fallback
+    const emps = lsEmployees();
+    const idx = emps.findIndex(e => e.emp_id === empId && e.org_id === oId);
+    if (idx !== -1) {
+      emps[idx] = { ...emps[idx], ...data };
+      LS.set('symbiosis_employees', emps);
+    }
+    return { success: true };
   }
   async deleteEmployee(empId) {
-    const res = await EmployeesAPI.deactivate(empId);
     const oId = window.state?.currentOrgId;
+    if (_supabase) {
+      try {
+        const emps = await querySupabase('employees', 'SELECT', null, { emp_id: empId, org_id: oId });
+        if (emps && emps.length > 0) {
+          const merged = { ...emps[0], status: 'Inactive' };
+          await querySupabase('employees', 'UPSERT', merged);
+        }
+      } catch (err) {
+        console.error("[Supabase] deleteEmployee failed:", err);
+      }
+    }
+    try { await EmployeesAPI.deactivate(empId); } catch {}
     if (this.cache.employees[oId]) {
       const idx = this.cache.employees[oId].findIndex(e => e.emp_id === empId);
       if (idx !== -1) this.cache.employees[oId][idx].status = 'Inactive';
     }
-    return res;
+    // Sync fallback
+    const emps = lsEmployees();
+    const idx = emps.findIndex(e => e.emp_id === empId && e.org_id === oId);
+    if (idx !== -1) {
+      emps[idx].status = 'Inactive';
+      LS.set('symbiosis_employees', emps);
+    }
+    return { success: true };
   }
   async bulkUpload(rows) {
     return EmployeesAPI.bulkUpload(rows);
@@ -895,9 +1170,20 @@ class ApiDatabase {
     return lsOrgs();
   }
   async createOrganization(org) {
-    const res = await OrgsAPI.create(org);
+    if (_supabase) {
+      try {
+        await querySupabase('organizations', 'UPSERT', org);
+      } catch (err) {
+        console.error("[Supabase] createOrganization failed:", err);
+      }
+    }
+    try { await OrgsAPI.create(org); } catch {}
     this.cache.organizations.push(org);
-    return res;
+    // Sync fallback
+    const orgs = lsOrgs();
+    orgs.push(org);
+    LS.set('symbiosis_orgs', orgs);
+    return { success: true };
   }
 
   // ── Schemas ────────────────────────────────────────────────────
@@ -906,9 +1192,16 @@ class ApiDatabase {
     return this.cache.schemas[oId] || { emp_id: 0, employee_name: 1, D1: 2, overtime_hours: 33 };
   }
   async saveSchema(orgId, schema) {
-    const res = await AttendanceAPI.saveSchema(orgId, schema);
+    if (_supabase) {
+      try {
+        await querySupabase('app_config', 'UPSERT', { key: `schema_${orgId}`, value: schema });
+      } catch (err) {
+        console.error("[Supabase] saveSchema failed:", err);
+      }
+    }
+    try { await AttendanceAPI.saveSchema(orgId, schema); } catch {}
     this.cache.schemas[orgId] = schema;
-    return res;
+    return { success: true };
   }
 
   // ── Attendance ─────────────────────────────────────────────────
@@ -920,7 +1213,23 @@ class ApiDatabase {
     return lsAttendance(oId, my);
   }
   async saveAttendance(orgId, monthYear, records) {
-    const res = await AttendanceAPI.upload(orgId, monthYear, records);
+    if (_supabase) {
+      try {
+        const formatted = records.map(r => ({
+          org_id: orgId,
+          emp_id: r.emp_id,
+          month_year: monthYear,
+          days: r.days,
+          ot_hours: r.ot || 0
+        }));
+        for (const row of formatted) {
+          await querySupabase('attendance', 'UPSERT', row);
+        }
+      } catch (err) {
+        console.error("[Supabase] saveAttendance failed:", err);
+      }
+    }
+    try { await AttendanceAPI.upload(orgId, monthYear, records); } catch {}
     const formatted = records.map(r => ({
       emp_id: r.emp_id,
       name: r.name || '',
@@ -929,7 +1238,9 @@ class ApiDatabase {
       ot: r.ot || 0
     }));
     this.cache.attendance[`${orgId}_${monthYear}`] = formatted;
-    return res;
+    // Sync fallback
+    LS.set(`symbiosis_attendance_${orgId}_${monthYear}`, formatted);
+    return { success: true };
   }
 
   // ── Payroll Ledger ─────────────────────────────────────────────
@@ -940,19 +1251,40 @@ class ApiDatabase {
     return lsLedger(oId);
   }
   async savePayrollRun(orgId, monthYear, runData) {
-    if (runData.status === 'Locked') {
-      const res = await PayrollAPI.lock(orgId, monthYear, runData.records);
-      if (!this.cache.ledger[orgId]) this.cache.ledger[orgId] = {};
-      this.cache.ledger[orgId][monthYear] = {
-        status: 'Locked',
-        approved_by: runData.approved_by || 'HR Admin',
-        approved_date: runData.approved_date || new Date().toISOString().split('T')[0],
-        records: runData.records,
-        adjustments_log: runData.adjustments_log || []
-      };
-      return res;
+    if (_supabase) {
+      try {
+        await querySupabase('payroll_ledger', 'UPSERT', {
+          org_id: orgId,
+          month_year: monthYear,
+          status: runData.status,
+          approved_by: runData.approved_by || 'HR Admin',
+          approved_date: runData.approved_date || new Date().toISOString().split('T')[0],
+          records: runData.records,
+          adjustments_log: runData.adjustments_log || []
+        });
+      } catch (err) {
+        console.error("[Supabase] savePayrollRun failed:", err);
+      }
     }
-    return Promise.resolve({ success: true, draft: true });
+    try {
+      if (runData.status === 'Locked') {
+        await PayrollAPI.lock(orgId, monthYear, runData.records);
+      }
+    } catch {}
+
+    if (!this.cache.ledger[orgId]) this.cache.ledger[orgId] = {};
+    this.cache.ledger[orgId][monthYear] = {
+      status: runData.status,
+      approved_by: runData.approved_by || 'HR Admin',
+      approved_date: runData.approved_date || new Date().toISOString().split('T')[0],
+      records: runData.records,
+      adjustments_log: runData.adjustments_log || []
+    };
+    // Sync fallback
+    const ledger = lsLedger(orgId);
+    ledger[monthYear] = this.cache.ledger[orgId][monthYear];
+    LS.set(`symbiosis_ledger_${orgId}`, ledger);
+    return { success: true };
   }
 
   // ── Legacy getTable / saveTable Shims ────────────────────────────
@@ -985,10 +1317,19 @@ class ApiDatabase {
   }
 
   async saveTable(tableName, data) {
+    if (_supabase) {
+      try {
+        if (tableName === 'employees') {
+          await querySupabase('employees', 'UPSERT', data);
+        } else if (tableName === 'organizations') {
+          await querySupabase('organizations', 'UPSERT', data);
+        }
+      } catch (err) {
+        console.error(`[Supabase] saveTable failed for ${tableName}:`, err);
+      }
+    }
     if (tableName === 'employees') {
-      // Save to localStorage
       LS.set('symbiosis_employees', data);
-      // Update cache
       const grouped = {};
       data.forEach(emp => {
         if (!grouped[emp.org_id]) grouped[emp.org_id] = [];
@@ -1001,11 +1342,6 @@ class ApiDatabase {
     if (tableName === 'organizations') {
       LS.set('symbiosis_orgs', data);
       this.cache.organizations = data;
-      const activeOrgId = window.state?.currentOrgId;
-      const modifiedOrg = data.find(o => o.org_id === activeOrgId || o.legacy_id === activeOrgId);
-      if (modifiedOrg && _backendAvailable) {
-        try { await OrgsAPI.update(modifiedOrg.org_id, modifiedOrg); } catch {}
-      }
     }
   }
 }
