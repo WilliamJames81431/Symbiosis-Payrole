@@ -1532,6 +1532,16 @@ async function handleLoginSubmit(e) {
 
     renderOtpVerificationScreen(obfuscatedEmail, otp);
   } catch (err) {
+    const petCard = document.querySelector('.pet-card');
+    const bubble = document.getElementById('pet-bubble');
+    const status = document.getElementById('pet-status');
+    if (petCard) {
+      petCard.classList.add('pet-shaking');
+      setTimeout(() => petCard.classList.remove('pet-shaking'), 500);
+    }
+    if (bubble) bubble.textContent = "Oops! " + err.message;
+    if (status) status.textContent = "Confused";
+
     alert("Authentication Failed: " + err.message);
     const submitBtn = document.querySelector('.login-submit');
     if (submitBtn) {
@@ -1593,6 +1603,15 @@ function handleOtpSubmit(e) {
   const enteredCode = document.getElementById('otp-code-field').value.trim();
   
   if (enteredCode === String(state.tempOtpCode)) {
+    const petCard = document.querySelector('.pet-card');
+    const bubble = document.getElementById('pet-bubble');
+    const status = document.getElementById('pet-status');
+    if (petCard) {
+      petCard.classList.add('pet-dancing');
+    }
+    if (bubble) bubble.textContent = "Success! Access granted! Launching system...";
+    if (status) status.textContent = "Celebrating";
+
     // Authenticate user
     const { role, targetOrgId, targetEmpId } = state.tempLogin;
     state.isLoggedIn = true;
@@ -1611,9 +1630,22 @@ function handleOtpSubmit(e) {
     const roleSelect = document.getElementById('login-role-selector');
     if (roleSelect) roleSelect.value = role;
 
-    renderCurrentView();
-    renderDatabaseExplorer();
+    // Brief timeout so celebrate animation is seen
+    setTimeout(() => {
+      renderCurrentView();
+      renderDatabaseExplorer();
+    }, 850);
   } else {
+    const petCard = document.querySelector('.pet-card');
+    const bubble = document.getElementById('pet-bubble');
+    const status = document.getElementById('pet-status');
+    if (petCard) {
+      petCard.classList.add('pet-shaking');
+      setTimeout(() => petCard.classList.remove('pet-shaking'), 500);
+    }
+    if (bubble) bubble.textContent = "Oh no, that OTP code doesn't match the Gmail alert!";
+    if (status) status.textContent = "Perplexed";
+
     alert("Incorrect OTP. Please enter the valid code sent in the Gmail simulated notification.");
   }
 }
@@ -1888,7 +1920,11 @@ async function renderLoginPage() {
   const b = getBranding();
 
   container.innerHTML = `
+    <!-- Living Canvas Background -->
+    <canvas id="login-canvas-bg"></canvas>
+
     <div class="login-wrapper">
+      <!-- Column 1: Login Card -->
       <div class="login-card">
         <div class="login-card-top">
           <div class="login-icon">${b.logoEmoji || '💼'}</div>
@@ -1953,6 +1989,79 @@ async function renderLoginPage() {
           <div id="google-signin-btn" style="display:flex; justify-content:center;"></div>
         </div>
       </div>
+
+      <!-- Column 2: Symbio Virtual Pet Assistant Card -->
+      <div class="pet-card">
+        <div class="pet-speech-bubble" id="pet-bubble">
+          Hi! I am Symbio, your compliance helper. Choose a role to get started!
+        </div>
+        <div class="pet-mascot-container" id="symbio-container">
+          <svg id="symbio-svg" viewBox="0 0 200 200" width="160" height="160">
+            <!-- Left Ear -->
+            <path class="ear-l" d="M 50 100 L 40 40 L 90 75 Z" fill="#4f46e5" />
+            <path class="ear-l-inner" d="M 55 95 L 48 50 L 82 76 Z" fill="#f472b6" />
+            
+            <!-- Right Ear -->
+            <path class="ear-r" d="M 150 100 L 160 40 L 110 75 Z" fill="#4f46e5" />
+            <path class="ear-r-inner" d="M 145 95 L 152 50 L 118 76 Z" fill="#f472b6" />
+            
+            <!-- Tail -->
+            <path d="M 120 160 Q 150 180 170 140 T 190 150" fill="none" stroke="#4f46e5" stroke-width="8" stroke-linecap="round" />
+            
+            <!-- Body -->
+            <circle cx="100" cy="150" r="45" fill="#6366f1" />
+            
+            <!-- Head -->
+            <rect x="50" y="70" width="100" height="85" rx="35" fill="#6366f1" />
+            
+            <!-- Eyes White -->
+            <ellipse cx="75" cy="105" rx="16" ry="20" fill="white" />
+            <ellipse cx="125" cy="105" rx="16" ry="20" fill="white" />
+            
+            <!-- Pupils Group -->
+            <g id="pupils">
+              <circle cx="75" cy="105" r="8" fill="#1e1b4b" />
+              <circle cx="73" cy="102" r="3" fill="white" />
+              <circle cx="125" cy="105" r="8" fill="#1e1b4b" />
+              <circle cx="123" cy="102" r="3" fill="white" />
+            </g>
+            
+            <!-- Nose & Mouth -->
+            <polygon points="96,118 104,118 100,122" fill="#f472b6" />
+            <path d="M 95 125 Q 100 128 100 125 T 105 125" fill="none" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
+            
+            <!-- Whiskers -->
+            <line x1="35" y1="120" x2="15" y2="122" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
+            <line x1="35" y1="126" x2="15" y2="130" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
+            <line x1="165" y1="120" x2="185" y2="122" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
+            <line x1="165" y1="126" x2="185" y2="130" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round" />
+            
+            <!-- Collar & Pendant -->
+            <path d="M 67 148 Q 100 155 133 148" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" />
+            <circle cx="100" cy="154" r="6" fill="#ef4444" />
+            
+            <!-- Left Paw -->
+            <g class="paw-l">
+              <circle cx="70" cy="170" r="12" fill="#4f46e5" />
+              <circle cx="64" cy="162" r="4" fill="#a5b4fc" />
+              <circle cx="70" cy="160" r="4" fill="#a5b4fc" />
+              <circle cx="76" cy="162" r="4" fill="#a5b4fc" />
+            </g>
+            
+            <!-- Right Paw -->
+            <g class="paw-r">
+              <circle cx="130" cy="170" r="12" fill="#4f46e5" />
+              <circle cx="124" cy="162" r="4" fill="#a5b4fc" />
+              <circle cx="130" cy="160" r="4" fill="#a5b4fc" />
+              <circle cx="136" cy="162" r="4" fill="#a5b4fc" />
+            </g>
+          </svg>
+        </div>
+        <div class="pet-stats">
+          <h4>🐱 Symbio Assistant</h4>
+          <p>Status: <span id="pet-status">Idle</span></p>
+        </div>
+      </div>
     </div>
   `;
 
@@ -1962,6 +2071,151 @@ async function renderLoginPage() {
 
   const form = document.getElementById('portal-login-form');
   if (form) form.addEventListener('submit', handleLoginSubmit);
+
+  // Initialize Canvas Particles & Mascot Logic
+  initLoginBackgroundCanvas();
+  initSymbioMascot();
+}
+
+function initLoginBackgroundCanvas() {
+  const canvas = document.getElementById('login-canvas-bg');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let width = (canvas.width = window.innerWidth);
+  let height = (canvas.height = window.innerHeight);
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const blobs = [
+    { x: width * 0.25, y: height * 0.25, vx: 0.3, vy: 0.2, r: 240, color: 'rgba(0, 113, 227, 0.12)' },
+    { x: width * 0.75, y: height * 0.25, vx: -0.2, vy: 0.3, r: 280, color: 'rgba(255, 149, 0, 0.08)' },
+    { x: width * 0.3, y: height * 0.75, vx: 0.4, vy: -0.3, r: 260, color: 'rgba(175, 82, 222, 0.1)' },
+    { x: width * 0.8, y: height * 0.75, vx: -0.3, vy: -0.2, r: 200, color: 'rgba(52, 199, 89, 0.08)' }
+  ];
+
+  let mouseX = width / 2;
+  let mouseY = height / 2;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function animate() {
+    if (!document.getElementById('login-canvas-bg')) return;
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--body-bg') || '#0f172a';
+    ctx.fillRect(0, 0, width, height);
+
+    blobs.forEach(b => {
+      b.x += b.vx;
+      b.y += b.vy;
+
+      const dx = mouseX - b.x;
+      const dy = mouseY - b.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 500) {
+        b.x += (dx / dist) * 0.6;
+        b.y += (dy / dist) * 0.6;
+      }
+
+      if (b.x - b.r < 0) { b.x = b.r; b.vx *= -1; }
+      if (b.x + b.r > width) { b.x = width - b.r; b.vx *= -1; }
+      if (b.y - b.r < 0) { b.y = b.r; b.vy *= -1; }
+      if (b.y + b.r > height) { b.y = height - b.r; b.vy *= -1; }
+
+      const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+      grad.addColorStop(0, b.color);
+      grad.addColorStop(1, 'transparent');
+      
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+}
+
+function initSymbioMascot() {
+  const container = document.getElementById('symbio-container');
+  const pupils = document.getElementById('pupils');
+  const bubble = document.getElementById('pet-bubble');
+  const status = document.getElementById('pet-status');
+  
+  if (!container || !pupils) return;
+
+  const idleMessages = [
+    "EPF basic wage cap is ₹15,000.",
+    "Did you know? ESI basic wage limit is ₹21,000.",
+    "Click a role to toggle demo values automatically!",
+    "Our reports module features full print layouts.",
+    "I follow your cursor! Try moving it around.",
+    "Symbiosis is 100% compliant with Indian Tax regulations."
+  ];
+
+  let messageTimer = setInterval(() => {
+    if (!document.getElementById('pet-bubble')) {
+      clearInterval(messageTimer);
+      return;
+    }
+    const idx = Math.floor(Math.random() * idleMessages.length);
+    bubble.textContent = idleMessages[idx];
+  }, 12000);
+
+  window.addEventListener('mousemove', (e) => {
+    if (!pupils || !document.getElementById('pupils')) return;
+    
+    const rect = pupils.getBoundingClientRect();
+    const eyeX = rect.left + rect.width / 2;
+    const eyeY = rect.top + rect.height / 2;
+    
+    const dx = e.clientX - eyeX;
+    const dy = e.clientY - eyeY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    const maxTravel = 5;
+    const angle = Math.atan2(dy, dx);
+    const tx = Math.cos(angle) * Math.min(dist / 30, maxTravel);
+    const ty = Math.sin(angle) * Math.min(dist / 30, maxTravel);
+    
+    pupils.style.transform = `translate(${tx}px, ${ty}px)`;
+  });
+
+  const username = document.getElementById('login-username');
+  const password = document.getElementById('login-password');
+
+  if (username) {
+    username.addEventListener('focus', () => {
+      container.classList.remove('hiding-eyes');
+      bubble.textContent = "Okay, what is your username or linked email?";
+      status.textContent = "Analyzing input...";
+      pupils.style.transform = `translate(0px, 4px)`;
+    });
+    username.addEventListener('blur', () => {
+      status.textContent = "Idle";
+    });
+  }
+
+  if (password) {
+    password.addEventListener('focus', () => {
+      container.classList.add('hiding-eyes');
+      bubble.textContent = "Ooh, password! Don't worry, I'm hiding my eyes.";
+      status.textContent = "Respecting privacy";
+    });
+    password.addEventListener('blur', () => {
+      container.classList.remove('hiding-eyes');
+      status.textContent = "Idle";
+    });
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
